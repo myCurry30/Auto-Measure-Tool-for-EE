@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "document-reader": {
+      "source": "bighardperson/computer-science-skills-collection",
+      "sourceType": "github",
+      "skillPath": "skills/document-reader/SKILL.md",
+      "computedHash": "4c8690cb9d4e030e4010442e3d3408d98a89f9d3c764a33ae65c7958199d92d4"
+    },
+    "instrument-software": {
+      "source": "metachow/instrument-software-skill",
+      "sourceType": "github",
+      "skillPath": "cn/.claude/skills/instrument-software/SKILL.md",
+      "computedHash": "e30506ce0b95ab17bbb0b706aa6185b3e934c104f1cb7d93fe3201c5ab9555f8"
+    },
+    "pyqt6-ui-development-rules": {
+      "source": "oimiragieo/agent-studio",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/pyqt6-ui-development-rules/SKILL.md",
+      "computedHash": "7d67c0d5cad20f9631cf6fe659cc6fbadee7dfb6a19f19dbe82a6c283a71d4fb"
+    },
+    "pyside6-reviewer": {
+      "source": "akiselev/qt-llm-template",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/qt-code-review/SKILL.md",
+      "computedHash": "d021110e8c24d2329bfb57e6ad1397dfdbf2021733acd5251c9591db305effef"
+    },
+    "ui-design": {
+      "source": "lync-cyber/CataForge",
+      "sourceType": "github",
+      "skillPath": ".cataforge/skills/ui-design/SKILL.md",
+      "computedHash": "c0809b613423b59ca3caf175c0f1d81a0f3584bb363cfdc45a7e4a332b924d5c"
+    }
+  }
+}
