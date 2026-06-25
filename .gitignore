@@ -1,0 +1,9 @@
+# Python virtual environment
+.venv/
+
+# IDE
+.idea/
+
+# Compiled
+__pycache__/
+*.pyc
