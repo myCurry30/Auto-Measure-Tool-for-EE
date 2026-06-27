@@ -28,7 +28,7 @@ def mkdir(path):
 
 
 def savepic(osc, pic_path, sheet_name, signal1, signal2, signal3,
-           project_name, flag_test_items, flag_monotony_direction):
+           project_name, test_type, flag_monotony_direction):
     """Save screenshot from oscilloscope to local disk.
 
     Args:
@@ -39,7 +39,7 @@ def savepic(osc, pic_path, sheet_name, signal1, signal2, signal3,
         signal2: CH2 signal name
         signal3: CH3 signal name (for item 9)
         project_name: Project name (for oscilloscope directory)
-        flag_test_items: Test item type
+        test_type: Test item type
         flag_monotony_direction: 1=Positive/Rise, 0=Negative/Fall (for item 10)
 
     Returns:
@@ -49,7 +49,7 @@ def savepic(osc, pic_path, sheet_name, signal1, signal2, signal3,
     print("-->", mkpath)
     mkdir(mkpath)
 
-    if flag_test_items != 10:
+    if test_type != "monotony":
         if signal3 != "":
             name = '%s TO %s TO %s' % (signal1, signal2, signal3)
         elif signal2 != "":
@@ -75,7 +75,7 @@ def savepic(osc, pic_path, sheet_name, signal1, signal2, signal3,
 
 
 def Capture_Pic(osc, xls, sheet_name, signal1, signal2, signal3,
-                flag_test_items, flag_monotony_direction, m, mso5,
+                test_type, flag_monotony_direction, m, mso5,
                 pic_path, project_name):
     """Capture screenshot, insert into Excel, and write measurements.
 
@@ -86,7 +86,7 @@ def Capture_Pic(osc, xls, sheet_name, signal1, signal2, signal3,
         signal1: CH1 signal name
         signal2: CH2 signal name
         signal3: CH3 signal name
-        flag_test_items: Test item type
+        test_type: Test item type
         flag_monotony_direction: 1=Positive/Rise, 0=Negative/Fall
         m: Current row index
         mso5: True if MSO4/5/6 series
@@ -99,16 +99,16 @@ def Capture_Pic(osc, xls, sheet_name, signal1, signal2, signal3,
     """
     xls.save()
     a1_1 = r'%s' % (savepic(osc, pic_path, sheet_name, signal1, signal2, signal3,
-                            project_name, flag_test_items, flag_monotony_direction))
+                            project_name, test_type, flag_monotony_direction))
     a1_1 = os.path.abspath(a1_1)
 
     xls.addPicture(sheet_name, a1_1, m, 0, 0, 0, 0,
-                   flag_test_items, flag_monotony_direction)
+                   test_type, flag_monotony_direction)
 
     delay_time = None
     value_top = value_base = value_max = value_min = None
 
-    if flag_test_items != 8 and flag_test_items != 9 and flag_test_items != 10:
+    if test_type != "monotony":
         delay_time_raw = osc.query('MEASUrement:MEAS7:MAX?')
         print('query delaytime:', delay_time_raw)
         if delay_time_raw.find('MEASUREMENT') != -1:
@@ -136,7 +136,7 @@ def Capture_Pic(osc, xls, sheet_name, signal1, signal2, signal3,
 
         xls.setCell(sheet_name, m, 7, delay_time)
 
-    if flag_test_items == 10:
+    if test_type == "monotony":
         value_top_raw = osc.query('MEASUrement:MEAS1:MAX?')
         value_base_raw = osc.query('MEASUrement:MEAS2:MAX?')
         value_max_raw = osc.query('MEASUrement:MEAS5:MAX?')

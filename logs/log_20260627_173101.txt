@@ -1,0 +1,70 @@
+[2026-06-27 17:31:02] [MainWindow] UI setup complete
+[2026-06-27 17:31:02] [MainWindow] All signals connected
+[2026-06-27 17:31:02] [AppState] project_name changed: C:\TH_V2
+[2026-06-27 17:31:02] [ConfigPanel] _on_file_path_changed: E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\Doc\test_1st_A.xlsx
+[2026-06-27 17:31:02] Opening Excel file: E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\Doc\test_1st_A.xlsx
+[2026-06-27 17:31:03] [EasyExcel] Excel window maximized
+[2026-06-27 17:31:03] [EasyExcel] Excel window brought to front
+[2026-06-27 17:31:03] [ConfigPanel] Loaded 30 sheets (Excel connected)
+[2026-06-27 17:31:03] [AppState] file_path changed: E:/Project/tools/MSO TOOL/EE-自动化测试/EE_Power_on_AutoTool_VER1.0/Doc/test_1st_A.xlsx
+[2026-06-27 17:31:03] [AppState] pic_path changed: E:/Project/tools/MSO TOOL/debug
+[2026-06-27 17:31:03] ============================================================
+[2026-06-27 17:31:03] Nettrix Power Sequence Test Tool V3.0 (PySide6)
+[2026-06-27 17:31:03] ============================================================
+[2026-06-27 17:31:03] Features:
+[2026-06-27 17:31:03]   - PySide6 GUI with macOS-style design
+[2026-06-27 17:31:03]   - Light/Dark theme support
+[2026-06-27 17:31:03]   - Rounded cards with shadows
+[2026-06-27 17:31:03]   - Smooth animations
+[2026-06-27 17:31:03]   - Tektronix oscilloscope support (MSO4/5/6, DPO7000, DPO5000)
+[2026-06-27 17:31:03]   - Excel test report generation
+[2026-06-27 17:31:03]   - Automated screenshot capture
+[2026-06-27 17:31:03] ============================================================
+[2026-06-27 17:31:12] [AppState] status: Reconnecting...
+[2026-06-27 17:31:12] [InstrumentManager] Attempting reconnect via ip...
+[2026-06-27 17:31:12] [InstrumentManager] Reconnect attempt 1/3
+[2026-06-27 17:31:12] [InstrumentManager] Attempting IP connection: TCPIP0::10.31.133.135::INSTR
+[2026-06-27 17:31:12] [InstrumentManager] *IDN? response: TEKTRONIX,MSO54B,C062615,CF:91.1CT FV:2.0.3.950
+[2026-06-27 17:31:12] [InstrumentManager] MSO4/5/6 series detected at TCPIP0::10.31.133.135::INSTR
+[2026-06-27 17:31:12] [InstrumentManager] Reconnect successful on attempt 1
+[2026-06-27 17:31:12] [AppState] connection changed: True
+[2026-06-27 17:31:12] [AppState] status: Reconnected: MSO5 (ip)
+[2026-06-27 17:31:12] [MainWindow] Reconnected: MSO5 via ip
+[2026-06-27 17:31:19] [AppState] file_path changed:
+[2026-06-27 17:31:19] [ConfigPanel] _on_file_path_changed: E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\Doc\test_1st_A.xlsx
+[2026-06-27 17:31:19] Opening Excel file: E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\Doc\test_1st_A.xlsx
+[2026-06-27 17:31:20] [EasyExcel] Excel window maximized
+[2026-06-27 17:31:20] [EasyExcel] Excel window brought to front
+[2026-06-27 17:31:20] [ConfigPanel] Loaded 30 sheets (Excel connected)
+[2026-06-27 17:31:20] [AppState] file_path changed: E:/Project/tools/MSO TOOL/EE-自动化测试/EE_Power_on_AutoTool_VER1.0/Doc/test_1st_A.xlsx
+[2026-06-27 17:31:20] [AppState] status: Excel reloaded
+[2026-06-27 17:31:20] [MainWindow] Excel reloaded
+[2026-06-27 17:31:27] [ConfigPanel] _on_sheet_selected called with: 1
+[2026-06-27 17:31:27] [ConfigPanel] Current state.sheet_name:
+[2026-06-27 17:31:27] [ConfigPanel] Excel object available: True
+[2026-06-27 17:31:27] [ConfigPanel] Dialog created, waiting for user selection...
+[2026-06-27 17:31:28] [ConfigPanel] Dialog accepted, selected sheet: 1
+[2026-06-27 17:31:28] [MainWindow] _on_sheet_name_changed called: 1
+[2026-06-27 17:31:28] [EasyExcel] Excel window maximized
+[2026-06-27 17:31:28] [EasyExcel] Excel window brought to front
+[2026-06-27 17:31:28] [EasyExcel] Activated sheet: 1
+[2026-06-27 17:31:28] [MainWindow] Excel sheet activated: 1
+[2026-06-27 17:31:29] [EasyExcel] Excel window maximized
+[2026-06-27 17:31:29] [EasyExcel] Excel window brought to front
+[2026-06-27 17:31:29] [EasyExcel] Activated sheet: 1
+[2026-06-27 17:31:29] [test_manager] go: row=8, type=sequence
+[2026-06-27 17:31:29] [AppState] status: Loaded test item sequence
+[2026-06-27 17:31:29] [MainWindow] Test data loaded: item=sequence, signal1=, signal2=, signal3=
+[2026-06-27 17:31:29] [MainWindow] Using existing Excel instance - no new window opened
+[2026-06-27 17:31:29] [AppState] status: Sheet: 1
+[2026-06-27 17:31:29] [AppState] sheet_name changed: 1
+[2026-06-27 17:31:29] [AppState] status: Sheet selected: 1
+[2026-06-27 17:31:29] [AppState] ch1_label changed: RST_PLTRST_SYNC_LVC18_CPU0_N
+[2026-06-27 17:31:29] [AppState] signal1 changed: RST_PLTRST_SYNC_LVC18_CPU0_N
+[2026-06-27 17:31:29] [AppState] ch2_label changed: RST_CPU0_LVC1_RESET_N
+[2026-06-27 17:31:29] [AppState] signal2 changed: RST_CPU0_LVC1_RESET_N
+[2026-06-27 17:31:29] [ConfigPanel] Initial signals read from sheet '1'
+[2026-06-27 17:31:29] [ConfigPanel] State updated, signal should be emitted
+[2026-06-27 17:31:42] [MainWindow] Application closed (settings saved)
+[2026-06-27 17:31:42] 
+Application closed.

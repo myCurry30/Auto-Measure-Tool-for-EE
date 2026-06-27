@@ -1,0 +1,14 @@
+{
+  "method": "ip",
+  "ip": "10.31.133.135",
+  "port": 4000,
+  "use_socket": false,
+  "scope_path": "C:\\TH_V2",
+  "save_to_scope": false,
+  "save_to_excel": false,
+  "init_row": 8,
+  "file_path": "E:/Project/tools/MSO TOOL/EE-\u81ea\u52a8\u5316\u6d4b\u8bd5/EE_Power_on_AutoTool_VER1.0/Doc/test_1st_A.xlsx",
+  "sheet_name": "",
+  "pic_path": "E:/Project/tools/MSO TOOL/debug",
+  "project_name": "C:\\TH_V2"
+}

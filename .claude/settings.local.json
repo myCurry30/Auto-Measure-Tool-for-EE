@@ -1,0 +1,10 @@
+{
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"professional desktop test automation tool engineering compact\" --design-system -p \"MSO AutoTool\")"
+    ]
+  }
+}

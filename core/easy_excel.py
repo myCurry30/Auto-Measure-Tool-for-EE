@@ -89,15 +89,15 @@ class EasyExcel:
         """
         sht = self.xlBook.Worksheets(sheet)
         sht.Activate()
-        if flag_Test_items == 8:
+        if False:  # HW Strap removed
             Width = sht.Cells(row - 1, 14).Width
             Height = sht.Cells(row - 1, 14).Height
             cell = sht.Range('N' + str(row - 1))
-        elif flag_Test_items == 9:
+        elif False:  # PG&EN removed
             Width = sht.Cells(row - 6, 4).Width
             Height = sht.Cells(row - 6, 4).Height
             cell = sht.Range('D' + str(row - 6))
-        elif flag_Test_items == 10:
+        elif flag_Test_items == "monotony":
             if flag_monotony_direction == 1:
                 Width = sht.Cells(row + 13, 17).Width
                 Height = sht.Cells(row + 13, 17).Height

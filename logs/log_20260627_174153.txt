@@ -1,0 +1,25 @@
+[2026-06-27 17:41:54] [MainWindow] UI setup complete
+[2026-06-27 17:41:54] [MainWindow] All signals connected
+[2026-06-27 17:41:54] [AppState] project_name changed: C:\TH_V2
+[2026-06-27 17:41:54] [ConfigPanel] _on_file_path_changed: E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\Doc\test_1st_A.xlsx
+[2026-06-27 17:41:54] Opening Excel file: E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\Doc\test_1st_A.xlsx
+[2026-06-27 17:41:55] [EasyExcel] Excel window maximized
+[2026-06-27 17:41:55] [EasyExcel] Excel window brought to front
+[2026-06-27 17:41:55] [ConfigPanel] Loaded 30 sheets (Excel connected)
+[2026-06-27 17:41:55] [AppState] file_path changed: E:/Project/tools/MSO TOOL/EE-自动化测试/EE_Power_on_AutoTool_VER1.0/Doc/test_1st_A.xlsx
+[2026-06-27 17:41:55] [AppState] pic_path changed: E:/Project/tools/MSO TOOL/debug
+[2026-06-27 17:41:55] ============================================================
+[2026-06-27 17:41:55] Nettrix Power Sequence Test Tool V3.0 (PySide6)
+[2026-06-27 17:41:55] ============================================================
+[2026-06-27 17:41:55] Features:
+[2026-06-27 17:41:55]   - PySide6 GUI with macOS-style design
+[2026-06-27 17:41:55]   - Light/Dark theme support
+[2026-06-27 17:41:55]   - Rounded cards with shadows
+[2026-06-27 17:41:55]   - Smooth animations
+[2026-06-27 17:41:55]   - Tektronix oscilloscope support (MSO4/5/6, DPO7000, DPO5000)
+[2026-06-27 17:41:55]   - Excel test report generation
+[2026-06-27 17:41:55]   - Automated screenshot capture
+[2026-06-27 17:41:55] ============================================================
+[2026-06-27 17:42:26] [MainWindow] Application closed (settings saved)
+[2026-06-27 17:42:26] 
+Application closed.

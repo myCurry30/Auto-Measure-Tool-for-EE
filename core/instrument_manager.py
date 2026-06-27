@@ -146,11 +146,19 @@ def check_connection(osc):
         return False
 
     try:
+        # Clear any stale binary data in buffer (e.g. after file transfers)
+        try:
+            osc.osc.clear()
+        except Exception:
+            pass
         response = osc.osc.query('*IDN?')
         if response and len(response) > 0:
             return True
     except pyvisa.Error as e:
         print(f'[InstrumentManager] Connection check failed: {e}')
+    except UnicodeDecodeError:
+        print('[InstrumentManager] Connection check: got binary data (ignored)')
+        return True  # scope responded, just with binary data
     except Exception as e:
         print(f'[InstrumentManager] Connection check error: {e}')
 

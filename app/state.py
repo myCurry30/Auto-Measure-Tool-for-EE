@@ -21,9 +21,11 @@ class AppState(QObject):
     signal1_changed = Signal(str)
     signal2_changed = Signal(str)
     signal3_changed = Signal(str)
+    signal4_changed = Signal(str)
     ch1_label_changed = Signal(str)
     ch2_label_changed = Signal(str)
     ch3_label_changed = Signal(str)
+    ch4_label_changed = Signal(str)
     current_item_changed = Signal(int)
     project_name_changed = Signal(str)
     jump_target_changed = Signal(int)
@@ -42,9 +44,11 @@ class AppState(QObject):
         self._signal1 = ""
         self._signal2 = ""
         self._signal3 = ""
+        self._signal4 = ""
         self._ch1_label = ""
         self._ch2_label = ""
         self._ch3_label = ""
+        self._ch4_label = ""
         self._current_item = 0
         self._project_name = ""
         self._jump_target = 0
@@ -52,8 +56,8 @@ class AppState(QObject):
         self._excel_row = 0
 
         # Internal state (not bound to GUI)
-        self.flag_test_items = 0
-        self.m = 8
+        self.test_type = "sequence"  # "sequence" or "monotony"
+        self.row = 8  # current Excel row number
         self.n = 6
         self.flag_mso_connect = False
         self.flag_monotony_direction = 1
@@ -63,11 +67,12 @@ class AppState(QObject):
         self.osc = None
         self.rm = None
         self.xls = None
-        self.tests_sum = 999
+        self.tests_sum = 0  # no limit
         self.sheet_summary = "Summary"
         self.signal1_name = ""
         self.signal2_name = ""
         self.signal3_name = ""
+        self.signal4_name = ""
 
     # Properties with signal emission
     @property
@@ -123,7 +128,8 @@ class AppState(QObject):
         if self._signal1 != v:
             self._signal1 = v
             self.signal1_changed.emit(v)
-            print(f"[AppState] signal1 changed: {v}")
+            if v:
+                print(f"[AppState] signal1 changed: {v}")
 
     @property
     def signal2(self):
@@ -134,7 +140,8 @@ class AppState(QObject):
         if self._signal2 != v:
             self._signal2 = v
             self.signal2_changed.emit(v)
-            print(f"[AppState] signal2 changed: {v}")
+            if v:
+                print(f"[AppState] signal2 changed: {v}")
 
     @property
     def signal3(self):
@@ -145,7 +152,20 @@ class AppState(QObject):
         if self._signal3 != v:
             self._signal3 = v
             self.signal3_changed.emit(v)
-            print(f"[AppState] signal3 changed: {v}")
+            if v:
+                print(f"[AppState] signal3 changed: {v}")
+
+    @property
+    def signal4(self):
+        return self._signal4
+
+    @signal4.setter
+    def signal4(self, v):
+        if self._signal4 != v:
+            self._signal4 = v
+            self.signal4_changed.emit(v)
+            if v:
+                print(f"[AppState] signal4 changed: {v}")
 
     @property
     def ch1_label(self):
@@ -179,6 +199,17 @@ class AppState(QObject):
             self._ch3_label = v
             self.ch3_label_changed.emit(v)
             print(f"[AppState] ch3_label changed: {v}")
+
+    @property
+    def ch4_label(self):
+        return self._ch4_label
+
+    @ch4_label.setter
+    def ch4_label(self, v):
+        if self._ch4_label != v:
+            self._ch4_label = v
+            self.ch4_label_changed.emit(v)
+            print(f"[AppState] ch4_label changed: {v}")
 
     @property
     def current_item(self):
@@ -254,14 +285,15 @@ class AppState(QObject):
         """
         return {
             'sheet_name': self._sheet_name,
-            'flag_test_items': self.flag_test_items,
+            'test_type': self.test_type,
             'flag_monotony_direction': self.flag_monotony_direction,
             'flag_mso_connect': self.flag_mso_connect,
             'mso5': self.mso5,
             'osc': self.osc,
             'xls': self.xls,
-            'm': self.m,
+            'row': self.row,
             'signal1_name': self.signal1_name,
             'signal2_name': self.signal2_name,
             'signal3_name': self.signal3_name,
+            'signal4_name': self.signal4_name,
         }

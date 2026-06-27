@@ -1,0 +1,5 @@
+[2026-06-27 17:21:24] [MainWindow] UI setup complete
+[2026-06-27 17:21:24] [MainWindow] All signals connected
+[2026-06-27 17:21:24] [AppState] project_name changed: C:\TH_V2
+[2026-06-27 17:21:24] [ConfigPanel] _on_file_path_changed: E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\Doc\test_1st_A.xlsx
+[2026-06-27 17:21:24] Opening Excel file: E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\Doc\test_1st_A.xlsx

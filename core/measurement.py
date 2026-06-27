@@ -28,18 +28,24 @@ def common_set(osc, dpo7000, dpo5104b):
     osc.state('run')
 
 
-def channel_Lable_set(osc, ch1_label, ch2_label, ch3_label):
-    """Set channel labels on oscilloscope.
+def channel_Lable_set(osc, ch1_label, ch2_label, ch3_label, ch4_label=""):
+    """Set channel labels on oscilloscope. None = skip (disabled).
 
     Args:
         osc: Oscilloscope instance
-        ch1_label: CH1 label text
-        ch2_label: CH2 label text
-        ch3_label: CH3 label text
+        ch1_label: CH1 label text or None to skip
+        ch2_label: CH2 label text or None to skip
+        ch3_label: CH3 label text or None to skip
+        ch4_label: CH4 label text or None to skip
     """
-    osc.label('CH1', ch1_label, 10, 40)
-    osc.label('CH2', ch2_label, 10, 40)
-    osc.label('CH3', ch3_label, 10, 40)
+    if ch1_label is not None:
+        osc.label('CH1', ch1_label, 10, 40)
+    if ch2_label is not None:
+        osc.label('CH2', ch2_label, 10, 40)
+    if ch3_label is not None:
+        osc.label('CH3', ch3_label, 10, 40)
+    if ch4_label is not None:
+        osc.label('CH4', ch4_label, 10, 40)
 
 
 def measure1(osc, mso5):

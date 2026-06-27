@@ -13,6 +13,18 @@ QMainWindow, QWidget {
     font-size: 13px;
 }
 
+/* === Menu Bar & Toolbar === */
+QMenuBar { background-color: #F5F5F7; border-bottom: 1px solid #E5E5E7; padding: 2px 8px; font-size: 13px; }
+QMenuBar::item { padding: 4px 12px; border-radius: 5px; color: #1D1D1F; }
+QMenuBar::item:selected { background-color: rgba(0,0,0,0.06); }
+QMenu { background-color: #FFFFFF; border: 1px solid #DADADF; border-radius: 8px; padding: 4px; margin: 4px 0 0 0; }
+QMenu::item { padding: 6px 32px 6px 12px; border-radius: 5px; color: #1D1D1F; }
+QMenu::item:selected { background-color: #007AFF; color: white; }
+QMenu::separator { height: 1px; background: #E5E5E7; margin: 4px 8px; }
+QToolBar { background: transparent; border: none; spacing: 4px; padding: 0 4px; }
+QToolBar QToolButton { padding: 4px 8px; border-radius: 5px; color: #1D1D1F; }
+QToolBar QToolButton:hover { background-color: rgba(0,0,0,0.06); }
+
 /* === Scroll Area === */
 QScrollArea {
     border: none;
@@ -257,6 +269,18 @@ QScrollArea {
 QScrollArea > QWidget > QWidget {
     background: transparent;
 }
+
+/* === Menu Bar & Toolbar (Dark) === */
+QMenuBar { background-color: #2C2C2E; border-bottom: 1px solid #3A3A3C; padding: 2px 8px; font-size: 13px; }
+QMenuBar::item { padding: 4px 12px; border-radius: 5px; color: #F5F5F7; }
+QMenuBar::item:selected { background-color: rgba(255,255,255,0.08); }
+QMenu { background-color: #2C2C2E; border: 1px solid #3A3A3C; border-radius: 8px; padding: 4px; margin: 4px 0 0 0; }
+QMenu::item { padding: 6px 32px 6px 12px; border-radius: 5px; color: #F5F5F7; }
+QMenu::item:selected { background-color: #0A84FF; color: white; }
+QMenu::separator { height: 1px; background: #3A3A3C; margin: 4px 8px; }
+QToolBar { background: transparent; border: none; spacing: 4px; padding: 0 4px; }
+QToolBar QToolButton { padding: 4px 8px; border-radius: 5px; color: #F5F5F7; }
+QToolBar QToolButton:hover { background-color: rgba(255,255,255,0.08); }
 
 /* === Sidebar === */
 #sidebarWidget {

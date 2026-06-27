@@ -1,0 +1,30 @@
+[2026-06-27 17:16:50] Traceback (most recent call last):
+[2026-06-27 17:16:50]   File "E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\main.py", line 11, in <module>
+[2026-06-27 17:16:50] from app.main_window import MainWindow
+[2026-06-27 17:16:50]   File "E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\app\main_window.py", line 13, in <module>
+[2026-06-27 17:16:50] from core import EasyExcel, instrument_manager, test_manager, measurement, capture
+[2026-06-27 17:16:50]   File "E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\core\__init__.py", line 4, in <module>
+[2026-06-27 17:16:50] from . import test_manager
+[2026-06-27 17:16:50]   File "E:\Project\tools\MSO TOOL\EE-自动化测试\EE_Power_on_AutoTool_VER1.0\core\test_manager.py", line 79
+[2026-06-27 17:16:50] if False  # removed flag 8:
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] ^
+[2026-06-27 17:16:50] SyntaxError
+[2026-06-27 17:16:50] :
+[2026-06-27 17:16:50] expected ':'
