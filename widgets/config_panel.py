@@ -114,9 +114,31 @@ class ConfigPanel(QWidget):
     def __init__(self, state, parent=None):
         super().__init__(parent)
         self.state = state
+        # Data columns (configurable via Settings → Set Data Columns)
+        self.data_col = 7              # Sequence: DELAY column (default G)
+        self.mono_p_cols = [9, 10, 11, 12]   # P: TOP, BASE, MAX, MIN (I,J,K,L)
+        self.mono_n_cols = [13, 14, 15, 16]  # N: TOP, BASE, MAX, MIN (M,N,O,P)
+        self.seq_pic_col = 9           # Sequence picture column (default I)
+        self.mono_p_pic_col = 17       # Monotony P picture column (default Q)
+        self.mono_n_pic_col = 18       # Monotony N picture column (default R)
+
+        # MSO horizontal settings
+        self.hor_mode = "AUTO"         # "AUTO" or "MANUAL"
+        self.hor_scale = 0.01          # seconds/div
+        self.hor_pos = 30              # percent
+
+        # MSO channel position/scale (per channel)
+        self.ch_pos = [-2.5, -3.5, -3.5, -3.5]
+        self.ch_scale = [1.0, 1.0, 1.0, 1.0]
+
+        # Label position (per channel)
+        self.ch_label_x = [10, 10, 10, 10]
+        self.ch_label_y = [40, 40, 40, 40]
         self.nav_bar = NavBar()
         self.setup_ui()
         self.connect_signals()
+        # Sync defaults for current test type (signals connected now)
+        self._on_test_type_changed(self.test_type_combo.currentText())
 
     def setup_ui(self):
         """Two columns + full-width bottom toolbar."""
@@ -259,8 +281,7 @@ class ConfigPanel(QWidget):
         info_layout.setSpacing(4)
 
         self.project_edit = QLineEdit()
-        self.project_edit.setText("C:\\")
-        self.project_edit.setPlaceholderText("C:\\scope_folder...")
+        self.project_edit.setPlaceholderText("e.g. TH_V2 or D:\\MyProject")
         self.sheet_combo = QComboBox()
         self.sheet_combo.setPlaceholderText("Select sheet…")
 
@@ -287,7 +308,7 @@ class ConfigPanel(QWidget):
         label_layout.setFormAlignment(Qt.AlignLeft)
         label_layout.setSpacing(4)
 
-        # CH rows with enable checkbox
+        # CH rows with enable checkbox + editable label
         self.ch_edits = []
         self.ch_enables = []
         ch_defaults = [(True, "CH1…"), (True, "CH2…"), (False, "CH3…"), (False, "CH4…")]
@@ -407,20 +428,17 @@ class ConfigPanel(QWidget):
 
         # -- Set MSO card --
         self.mso_card = ConfigCard("Set MSO")
-        mso_form = QFormLayout()
-        mso_form.setContentsMargins(0, 2, 0, 0)
-        self.set_mso_btn = QPushButton("⚙ Set MSO")
-        self.set_mso_btn.setMinimumWidth(120)
-        self.set_mso_btn.setToolTip("Configure oscilloscope channels and measurements")
+        self.set_mso_btn = QPushButton("⚡ One-Click Config")
+        self.set_mso_btn.setMinimumWidth(140)
+        self.set_mso_btn.setToolTip("Full oscilloscope configuration (settings from menu dialogs)")
         self.set_mso_btn.clicked.connect(lambda: self.set_mso_clicked.emit())
-
         mso_btn_row = QWidget()
         mso_btn_lay = QHBoxLayout(mso_btn_row)
         mso_btn_lay.setContentsMargins(0, 4, 0, 0)
         mso_btn_lay.addWidget(self.set_mso_btn)
         mso_btn_lay.addStretch()
-        mso_form.addRow("", mso_btn_row)
-        self.mso_card.content_layout.addLayout(mso_form)
+        self.mso_card.content_layout.addWidget(mso_btn_row)
+
         right_layout.addWidget(self.mso_card, 0, Qt.AlignTop)
         right_layout.addStretch()
 
@@ -578,6 +596,9 @@ class ConfigPanel(QWidget):
                 self.state.sheet_name = selected
                 self.state.set_status(f"Sheet selected: {selected}")
                 self._raise_gui()
+                # Apply saved config for this sheet before reading signals
+                # (so that init_row and signal R:/C: are correct)
+                self._apply_sheet_config(selected)
                 self._read_initial_signals()
                 print(f"[ConfigPanel] State updated, signal should be emitted")
             else:
@@ -664,22 +685,40 @@ class ConfigPanel(QWidget):
         if is_monotony:
             self.signal_cols = [2, 2, 2, 2]
             self.init_row = 21
+            # Monotony: only SIG1 + CH1 enabled by default
+            sig_defaults = [True, False, False, False]
+            ch_defaults   = [True, False, False, False]
         else:
             self.signal_cols = [5, 6, 7, 8]
             self.init_row = 8
+            # Sequence: SIG1 + SIG2, CH1 + CH2 enabled by default
+            sig_defaults = [True, True, False, False]
+            ch_defaults   = [True, True, False, False]
         self.state.row = self.init_row
-        # Update R spinbox minimums
-        for rspin in self.signal_rows:
-            rspin.setMinimum(self.init_row)
-            rspin.setValue(self.init_row)
+        # Update signal enables + R spinboxes + channel enables
+        for i in range(4):
+            self.signal_enables[i].setChecked(sig_defaults[i])
+            self.signal_rows[i].setMinimum(self.init_row)
+            self.signal_rows[i].setValue(self.init_row)
+            self.signal_rows[i].setEnabled(sig_defaults[i])
+            self.ch_enables[i].setChecked(ch_defaults[i])
+            self.ch_edits[i].setEnabled(ch_defaults[i])
+            if not ch_defaults[i]:
+                self.ch_edits[i].clear()
         self.nav_bar.clamp_min(self.init_row)
+        self.nav_bar.reset_jump(self.init_row)
         self._read_initial_signals()
+        # Force CH label values to follow signal values after type switch
+        for i in range(4):
+            if ch_defaults[i]:
+                sig_val = getattr(self.state, f'signal{i + 1}', '')
+                self.ch_edits[i].setText(sig_val)
+                setattr(self.state, f'ch{i + 1}_label', sig_val)
 
     def _on_signal_toggled(self, idx):
         """Enable/disable signal: gray spinboxes, clear name when disabled."""
         en = self.signal_enables[idx].isChecked()
         self.signal_rows[idx].setEnabled(en)
-        self.signal_cols[idx].setEnabled(en)
         if not en:
             self.signal_edits[idx].clear()
             setattr(self.state, f'signal{idx + 1}', '')
@@ -702,7 +741,7 @@ class ConfigPanel(QWidget):
         if not en:
             return  # disabled: skip logging
         row = self.signal_rows[idx].value()
-        col = self.signal_cols[idx].value()
+        col = self.signal_cols[idx]  # int list, not spinbox
         try:
             val = self.state.xls.getCell(self.state.sheet_name, row, col)
             name = str(val) if val is not None else ''
@@ -720,35 +759,151 @@ class ConfigPanel(QWidget):
 
     # ── Config import/export ───────────────────────────────────────────
 
+    def _gather_sheet_config(self, sheet_name):
+        """Build a dict of sheet-specific settings for the given sheet."""
+        return {
+            "test_type": self.state.test_type,
+            "init_row": self.init_row,
+            "signal_cols": list(self.signal_cols),
+            "signals": [self.signal_enables[i].isChecked() for i in range(4)],
+            "ch_enables": [self.ch_enables[i].isChecked() for i in range(4)],
+            "data_col": self.data_col,
+            "mono_p_cols": list(self.mono_p_cols),
+            "mono_n_cols": list(self.mono_n_cols),
+            "seq_pic_col": self.seq_pic_col,
+            "mono_p_pic_col": self.mono_p_pic_col,
+            "mono_n_pic_col": self.mono_n_pic_col,
+            "ch_label_x": list(self.ch_label_x),
+            "ch_label_y": list(self.ch_label_y),
+            "save_to_excel": self.save_to_excel_cb.isChecked(),
+            "save_to_scope": self.save_to_scope_cb.isChecked(),
+        }
+
+    def _apply_sheet_config(self, sheet_name):
+        """Apply saved config for the given sheet, if available in loaded config."""
+        if not hasattr(self, '_loaded_config') or not self._loaded_config:
+            return
+        sheets = self._loaded_config.get("sheets", {})
+        if sheet_name not in sheets:
+            print(f"[ConfigPanel] No saved config for sheet '{sheet_name}'")
+            return
+        sc = sheets[sheet_name]
+        print(f"[ConfigPanel] Applying saved config for sheet '{sheet_name}'")
+
+        # Test type (applied first; resets init_row to default for the type)
+        if "test_type" in sc:
+            wanted = "Monotony" if sc["test_type"] == "monotony" else "Sequence"
+            self.test_type_combo.blockSignals(True)
+            self.test_type_combo.setCurrentText(wanted)
+            self.test_type_combo.blockSignals(False)
+            self._on_test_type_changed(wanted)
+
+        # Init row — override with saved value (from Settings → Set Init Row)
+        if "init_row" in sc:
+            self.init_row = sc["init_row"]
+            self.state.row = sc["init_row"]
+            # Clamp signal R: spinboxes to >= init_row
+            for rspin in self.signal_rows:
+                rspin.setMinimum(sc["init_row"])
+
+        # Signal columns (global per sheet, from Settings → Set Signal Cols)
+        if "signal_cols" in sc:
+            self.signal_cols = list(sc["signal_cols"])
+
+        # Signals (enable only; R:/C: derived from init_row + signal_cols)
+        if "signals" in sc:
+            for i, en in enumerate(sc["signals"]):
+                if i < 4:
+                    self.signal_enables[i].setChecked(en)
+                    self.signal_rows[i].setValue(self.init_row)
+                    self.signal_rows[i].setEnabled(en)
+
+        # Channel enables
+        if "ch_enables" in sc:
+            for i, en in enumerate(sc["ch_enables"]):
+                if i < 4:
+                    self.ch_enables[i].setChecked(en)
+
+        # Data columns (from Settings → Set Data Columns)
+        if "data_col" in sc:
+            self.data_col = sc["data_col"]
+        if "mono_p_cols" in sc:
+            self.mono_p_cols = list(sc["mono_p_cols"])
+        if "mono_n_cols" in sc:
+            self.mono_n_cols = list(sc["mono_n_cols"])
+
+        # Picture columns (from Settings → Set Picture Columns)
+        if "seq_pic_col" in sc:
+            self.seq_pic_col = sc["seq_pic_col"]
+        if "mono_p_pic_col" in sc:
+            self.mono_p_pic_col = sc["mono_p_pic_col"]
+        if "mono_n_pic_col" in sc:
+            self.mono_n_pic_col = sc["mono_n_pic_col"]
+
+        # Label position
+        if "ch_label_x" in sc:
+            self.ch_label_x = list(sc["ch_label_x"])
+        if "ch_label_y" in sc:
+            self.ch_label_y = list(sc["ch_label_y"])
+
+        # Save checkboxes
+        if "save_to_excel" in sc:
+            self.save_to_excel_cb.setChecked(sc["save_to_excel"])
+        if "save_to_scope" in sc:
+            self.save_to_scope_cb.setChecked(sc["save_to_scope"])
+
+    def remember_current_sheet_config(self):
+        """Save current sheet's config into loaded config memory (for accumulation).
+
+        Call this after data is successfully saved to a sheet, so that the sheet's
+        config is accumulated and will be included in the next export.
+        """
+        sheet = self.state.sheet_name
+        if not sheet:
+            return
+        if not hasattr(self, '_loaded_config') or self._loaded_config is None:
+            self._loaded_config = {"sheets": {}}
+        if "sheets" not in self._loaded_config:
+            self._loaded_config["sheets"] = {}
+        self._loaded_config["sheets"][sheet] = self._gather_sheet_config(sheet)
+        print(f"[ConfigPanel] Remembered config for sheet '{sheet}'")
+
     def export_config(self):
-        """Export all settings to a JSON file."""
+        """Export all accumulated sheet configs to a JSON file."""
         path, _ = QFileDialog.getSaveFileName(
             self, "Export Config", "config.json", "JSON (*.json)")
         if not path:
             return
 
-        cfg = {
-            "project_name": self.state.project_name,
-            "excel_path": self.state.file_path,
-            "pic_path": self.state.pic_path,
-            "sheet_name": self.state.sheet_name,
-            "signals": [
-                {"enable": self.signal_enables[i].isChecked(),
-                 "row": self.signal_rows[i].value(),
-                 "col": self.signal_cols[i]}
-                for i in range(4)
-            ],
-            "ch1_label": self.state.ch1_label,
-            "ch2_label": self.state.ch2_label,
-            "ch3_label": self.state.ch3_label,
-            "ch4_label": self.state.ch4_label,
-        }
+        # Start from in-memory accumulated config, or load existing file
+        cfg = {}
+        if hasattr(self, '_loaded_config') and self._loaded_config:
+            cfg = self._loaded_config
+        elif os.path.exists(path):
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    cfg = json.load(f)
+            except Exception:
+                pass
+        if "sheets" not in cfg:
+            cfg["sheets"] = {}
+
+        # Global settings
+        cfg["project_name"] = self.state.project_name
+        cfg["excel_path"] = self.state.file_path
+        cfg["pic_path"] = self.state.pic_path
+
+        # Always include current sheet (in case it hasn't been remembered yet)
+        current_sheet = self.state.sheet_name or "Sheet1"
+        cfg["sheets"][current_sheet] = self._gather_sheet_config(current_sheet)
+
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(cfg, f, ensure_ascii=False, indent=2)
-        print(f"[ConfigPanel] Config exported to {path}")
+        sheet_names = list(cfg["sheets"].keys())
+        print(f"[ConfigPanel] Config exported to {path} ({len(sheet_names)} sheets: {sheet_names})")
 
     def import_config(self):
-        """Import settings from a JSON file and apply them."""
+        """Import settings from a JSON file. Supports sheet-aware format."""
         path, _ = QFileDialog.getOpenFileName(
             self, "Import Config", "", "JSON (*.json)")
         if not path:
@@ -758,30 +913,27 @@ class ConfigPanel(QWidget):
             with open(path, 'r', encoding='utf-8') as f:
                 cfg = json.load(f)
 
+            # Store for auto-apply on sheet switch
+            self._loaded_config = cfg
+            self._config_file_path = path
+
+            # Apply global settings
             if cfg.get("project_name"):
                 self.state.project_name = cfg["project_name"]
             if cfg.get("excel_path") and os.path.exists(cfg["excel_path"]):
                 self.state.file_path = cfg["excel_path"]
             if cfg.get("pic_path") and os.path.isdir(cfg["pic_path"]):
                 self.state.pic_path = cfg["pic_path"]
-            if cfg.get("sheet_name"):
-                self.state.sheet_name = cfg["sheet_name"]
-            if cfg.get("signals"):
-                for i, s in enumerate(cfg["signals"]):
-                    if i < 4:
-                        self.signal_enables[i].setChecked(s.get("enable", True))
-                        self.signal_rows[i].setValue(s.get("row", 8 + i))
-                        self.signal_cols[i].setValue(s.get("col", 3))
-            if cfg.get("ch1_label"):
-                self.state.ch1_label = cfg["ch1_label"]
-            if cfg.get("ch2_label"):
-                self.state.ch2_label = cfg["ch2_label"]
-            if cfg.get("ch3_label"):
-                self.state.ch3_label = cfg["ch3_label"]
-            if cfg.get("ch4_label"):
-                self.state.ch4_label = cfg["ch4_label"]
 
-            print(f"[ConfigPanel] Config imported from {path}")
+            # Apply current sheet's config if available
+            current_sheet = self.state.sheet_name
+            if current_sheet:
+                self._apply_sheet_config(current_sheet)
+
+            # List loaded sheets
+            sheets = cfg.get("sheets", {})
+            print(f"[ConfigPanel] Config imported from {path} "
+                  f"({len(sheets)} sheets: {list(sheets.keys())})")
 
         except Exception as e:
             print(f"[ConfigPanel] Error importing config: {e}")

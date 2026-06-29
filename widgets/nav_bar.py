@@ -99,13 +99,17 @@ class NavBar(QWidget):
             pass
 
     def clamp_min(self, min_val):
-        """Ensure jump value is >= min_val."""
+        """Ensure jump value is >= min_val; also reset to min_val on type switch."""
         try:
             v = int(self.jump_edit.text())
             if v < min_val:
                 self.jump_edit.setText(str(min_val))
         except ValueError:
             self.jump_edit.setText(str(min_val))
+
+    def reset_jump(self, val):
+        """Set jump to a specific value (e.g., default row for test type)."""
+        self.jump_edit.setText(str(val))
 
     def _on_jump(self):
         try:

@@ -58,9 +58,13 @@ class EasyExcel:
             pythoncom.CoUninitialize()
 
     def getCell(self, sheet, row, col):
+        """Read cell value. For merged cells, returns the top-left value."""
         sht = self.xlBook.Worksheets(sheet)
         sht.Activate()
-        return sht.Cells(row, col).Value
+        cell = sht.Cells(row, col)
+        # MergeArea.Cells(1,1) is the top-left cell of the merged range
+        # (for non-merged cells, MergeArea is just the cell itself)
+        return cell.MergeArea.Cells(1, 1).Value
 
     def setCell(self, sheet, row, col, value):
         sht = self.xlBook.Worksheets(sheet)
@@ -72,8 +76,16 @@ class EasyExcel:
         sht.Activate()
         return sht.Range(sht.Cells(row1, col1), sht.Cells(row2, col2)).Value
 
+    def _col_letter(self, n):
+        """1→A, 26→Z, 27→AA, ..."""
+        s = ''
+        while n > 0:
+            n, r = divmod(n - 1, 26)
+            s = chr(65 + r) + s
+        return s
+
     def addPicture(self, sheet, PictureName, row, left_offset, Top_offset, width, height,
-                   flag_Test_items=0, flag_monotony_direction=1):
+                   flag_Test_items=0, flag_monotony_direction=1, pic_cols=None):
         """Insert picture into Excel cell.
 
         Args:
@@ -84,37 +96,37 @@ class EasyExcel:
             Top_offset: Top offset from cell
             width: Image width (0 to use cell width)
             height: Image height (0 to use cell height)
-            flag_Test_items: Test item type (8, 9, 10, or 0-7, 12)
-            flag_monotony_direction: 1=Positive/Rise, 0=Negative/Fall (for item 10)
+            flag_Test_items: "sequence" or "monotony"
+            flag_monotony_direction: 1=Positive/Rise, 0=Negative/Fall (for monotony)
+            pic_cols: Optional tuple (seq_col, mono_p_col, mono_n_col)
         """
         sht = self.xlBook.Worksheets(sheet)
         sht.Activate()
-        if False:  # HW Strap removed
-            Width = sht.Cells(row - 1, 14).Width
-            Height = sht.Cells(row - 1, 14).Height
-            cell = sht.Range('N' + str(row - 1))
-        elif False:  # PG&EN removed
-            Width = sht.Cells(row - 6, 4).Width
-            Height = sht.Cells(row - 6, 4).Height
-            cell = sht.Range('D' + str(row - 6))
-        elif flag_Test_items == "monotony":
-            if flag_monotony_direction == 1:
-                Width = sht.Cells(row + 13, 17).Width
-                Height = sht.Cells(row + 13, 17).Height
-                cell = sht.Range('Q' + str(row + 13))
-            if flag_monotony_direction == 0:
-                Width = sht.Cells(row + 13, 18).Width
-                Height = sht.Cells(row + 13, 18).Height
-                cell = sht.Range('R' + str(row + 13))
+        if flag_Test_items == "monotony":
+            target_row = row
+            if pic_cols:
+                col_num = pic_cols[1] if flag_monotony_direction == 1 else pic_cols[2]
+            else:
+                col_num = 17 if flag_monotony_direction == 1 else 18
+            cell_addr = self._col_letter(col_num) + str(target_row)
+            Width = sht.Cells(target_row, col_num).Width
+            Height = sht.Cells(target_row, col_num).Height
+            cell = sht.Range(cell_addr)
         else:
-            Width = sht.Cells(row, 9).Width
-            Height = sht.Cells(row, 9).Height
-            cell = sht.Range('I' + str(row))
+            target_row = row
+            col_num = pic_cols[0] if pic_cols else 9
+            cell_addr = self._col_letter(col_num) + str(target_row)
+            Width = sht.Cells(target_row, col_num).Width
+            Height = sht.Cells(target_row, col_num).Height
+            cell = sht.Range(cell_addr)
+        print(f"[EasyExcel] addPicture: type={flag_Test_items}, dir={flag_monotony_direction}, "
+              f"cell={cell_addr}, row={target_row}, W={Width:.0f}, H={Height:.0f}")
         cell.Select()
         cell.ClearFormats()
         sht.Shapes.AddPicture(PictureName, LinkToFile=False, SaveWithDocument=True,
                               Left=cell.Left + left_offset, Top=cell.Top + Top_offset,
                               Width=Width, Height=Height)
+        print(f"[EasyExcel] addPicture: inserted at {cell_addr}")
 
     def get_sheet_names(self):
         """Return a list of all sheet names in the workbook."""

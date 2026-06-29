@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
         self.state = AppState()
         self.current_theme = 'light'
 
-        # Connection state (restore from last session)
+        # Connection state (restore from last session — connection info only)
         self._settings_file = os.path.join(os.path.dirname(__file__), '..', 'app_settings.json')
         saved = self._load_settings()
         self._last_connect_method = saved.get('method', 'usb_gpib')
@@ -36,25 +36,16 @@ class MainWindow(QMainWindow):
         self.setup_ui()
         self.connect_signals()
 
-        # Restore saved scope/pic/file settings
-        if saved.get('scope_path'):
-            self.config_panel.project_edit.setText(saved['scope_path'])
-        if 'save_to_scope' in saved:
-            self.config_panel.save_to_scope_cb.setChecked(saved['save_to_scope'])
-        if 'save_to_excel' in saved:
-            self.config_panel.save_to_excel_cb.setChecked(saved['save_to_excel'])
+        # Restore file paths (display only, no auto-load)
         if saved.get('file_path'):
-            self.state.file_path = saved['file_path']
+            self.state._file_path = saved['file_path']
+            self.config_panel.excel_edit.setText(saved['file_path'])
         if saved.get('pic_path'):
             self.state.pic_path = saved['pic_path']
+
+        # Restore scope save path (project_name)
         if saved.get('project_name'):
             self.state.project_name = saved['project_name']
-        if saved.get('init_row'):
-            self.config_panel.init_row = saved['init_row']
-            self.state.row = saved['init_row']
-            self.config_panel.nav_bar.clamp_min(saved['init_row'])
-            for rspin in self.config_panel.signal_rows:
-                rspin.setMinimum(saved['init_row'])
 
         # Show saved IP in menu bar if any
         if self._last_ip:
@@ -63,7 +54,7 @@ class MainWindow(QMainWindow):
             self.conn_info_label.setText("GPIB/USB")
 
     def setup_ui(self):
-        self.setWindowTitle("Nettrix Power Sequence Test Tool V3.0 (PySide6)")
+        self.setWindowTitle("硬件工程师自动化测试工具 V2.0 - Nettrix - liujch2")
         self.setMinimumSize(700, 400)
         self.resize(740, 460)
 
@@ -82,10 +73,14 @@ class MainWindow(QMainWindow):
         # -- File menu --
         file_menu = menu_bar.addMenu("File")
         file_menu.setToolTipsVisible(True)
-        save_action = QAction("📋  Save Excel", self)
+        save_action = QAction("Save Excel", self)
         save_action.setToolTip("Save the opened Excel workbook")
         save_action.triggered.connect(self._on_save)
         file_menu.addAction(save_action)
+        reload_action = QAction("Reload Excel", self)
+        reload_action.setToolTip("Reopen Excel file and restore current sheet")
+        reload_action.triggered.connect(self._reload_excel)
+        file_menu.addAction(reload_action)
         file_menu.addSeparator()
         export_action = QAction("Export Config", self)
         export_action.setToolTip("Export all settings to a JSON config file")
@@ -121,6 +116,13 @@ class MainWindow(QMainWindow):
         self.reconnect_tb.triggered.connect(self._on_reconnect)
         toolbar.addAction(self.reconnect_tb)
 
+        toolbar.addSeparator()
+
+        self.reload_tb = QAction("📂 Reload Excel", self)
+        self.reload_tb.setToolTip("Reopen Excel file and restore current sheet")
+        self.reload_tb.triggered.connect(self._reload_excel)
+        toolbar.addAction(self.reload_tb)
+
         # Spacer to push IP label to right
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -131,10 +133,6 @@ class MainWindow(QMainWindow):
         # -- Settings menu --
         settings_menu = menu_bar.addMenu("Settings")
         settings_menu.setToolTipsVisible(True)
-        reload_action = QAction("Reload Excel", self)
-        reload_action.setToolTip("Reopen Excel file and restore current sheet")
-        reload_action.triggered.connect(self._reload_excel)
-        settings_menu.addAction(reload_action)
         init_row_action = QAction("Set Init Row...", self)
         init_row_action.setToolTip("Set the starting row number for test items")
         init_row_action.triggered.connect(self._set_init_row)
@@ -143,6 +141,27 @@ class MainWindow(QMainWindow):
         sig_col_action.setToolTip("Set Excel column for each signal")
         sig_col_action.triggered.connect(self._set_signal_cols)
         settings_menu.addAction(sig_col_action)
+        data_col_action = QAction("Set Data Columns...", self)
+        data_col_action.setToolTip("Set Excel columns for measurement data (Sequence + Monotony)")
+        data_col_action.triggered.connect(self._set_data_cols)
+        settings_menu.addAction(data_col_action)
+        pic_col_action = QAction("Set Picture Columns...", self)
+        pic_col_action.setToolTip("Set Excel columns for screenshot insertion (Sequence + Monotony P/N)")
+        pic_col_action.triggered.connect(self._set_pic_cols)
+        settings_menu.addAction(pic_col_action)
+        settings_menu.addSeparator()
+        hor_action = QAction("MSO Horizontal...", self)
+        hor_action.setToolTip("Configure oscilloscope horizontal: mode, scale, position")
+        hor_action.triggered.connect(self._set_mso_horizontal)
+        settings_menu.addAction(hor_action)
+        ch_action = QAction("MSO Channel Setup...", self)
+        ch_action.setToolTip("Configure per-channel vertical position and scale")
+        ch_action.triggered.connect(self._set_mso_channels)
+        settings_menu.addAction(ch_action)
+        label_action = QAction("Set Label Position...", self)
+        label_action.setToolTip("Configure channel label X/Y position on oscilloscope display")
+        label_action.triggered.connect(self._set_label_position)
+        settings_menu.addAction(label_action)
         settings_menu.addSeparator()
         light_action = QAction("Light Theme", self)
         light_action.setToolTip("Switch to light color theme")
@@ -204,11 +223,11 @@ class MainWindow(QMainWindow):
         print("[MainWindow] UI setup complete")
 
     def closeEvent(self, event: QCloseEvent):
-        """Handle application close — save settings, keep Excel open."""
+        """Handle application close — save connection info, keep Excel open."""
         if hasattr(self, '_connection_monitor_timer'):
             self._connection_monitor_timer.stop()
         self._save_settings()
-        print("[MainWindow] Application closed (settings saved)")
+        print("[MainWindow] Application closed")
         super().closeEvent(event)
 
     def _load_settings(self):
@@ -219,18 +238,13 @@ class MainWindow(QMainWindow):
             return {}
 
     def _save_settings(self):
-        cp = self.config_panel
+        """Save connection info + file paths. Other settings reset to defaults on restart."""
         cfg = {
             'method': self._last_connect_method,
             'ip': self._last_ip,
             'port': self._last_port,
             'use_socket': self._last_use_socket,
-            'scope_path': cp.project_edit.text(),
-            'save_to_scope': cp.save_to_scope_cb.isChecked(),
-            'save_to_excel': cp.save_to_excel_cb.isChecked(),
-            'init_row': cp.init_row,
             'file_path': self.state.file_path,
-            'sheet_name': self.state.sheet_name,
             'pic_path': self.state.pic_path,
             'project_name': self.state.project_name,
         }
@@ -522,7 +536,7 @@ class MainWindow(QMainWindow):
             if not cp.signal_enables[i].isChecked():
                 continue
             row = cp.signal_rows[i].value()
-            col = cp.signal_cols[i].value()
+            col = cp.signal_cols[i]  # int list, not spinbox
             name = getattr(self.state, f'signal{i + 1}', '') or '-'
             lines.append(f"  Sig{i + 1}: [✓] R:{row} C:{col} = {name}")
         lines.append("─" * 20)
@@ -558,6 +572,142 @@ class MainWindow(QMainWindow):
             cp.signal_cols = [s.value() for s in spins]
             cp._read_initial_signals()
             print(f"[MainWindow] Signal cols set to {cp.signal_cols}")
+
+    @staticmethod
+    def _col_to_letter(n):
+        """1→A, 26→Z, 27→AA, ..."""
+        s = ''
+        while n > 0:
+            n, r = divmod(n - 1, 26)
+            s = chr(65 + r) + s
+        return s
+
+    def _col_spin_with_letter(self, spin):
+        """Return a widget: spinbox + '→ letter' label."""
+        from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
+        w = QWidget()
+        lay = QHBoxLayout(w); lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(4)
+        lay.addWidget(spin)
+        letter = QLabel('→ ' + self._col_to_letter(spin.value()))
+        letter.setFixedWidth(45)
+        spin.valueChanged.connect(lambda v, l=letter: l.setText('→ ' + self._col_to_letter(v)))
+        lay.addWidget(letter)
+        lay.addStretch()
+        return w
+
+    def _set_data_cols(self):
+        """Open dialog to set measurement data columns (Sequence DELAY + Monotony TOP/BASE/MAX/MIN)."""
+        from PySide6.QtWidgets import (QDialog, QFormLayout, QSpinBox,
+                                        QDialogButtonBox, QVBoxLayout, QLabel, QGroupBox)
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Data Columns")
+        lay = QVBoxLayout(dlg)
+        cp = self.config_panel
+
+        def _make_spin(val):
+            sp = QSpinBox(); sp.setRange(1, 99); sp.setValue(val); return sp
+
+        def _make_form():
+            f = QFormLayout()
+            f.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            f.setSpacing(6)
+            return f
+
+        # ── Sequence ──
+        seq_grp = QGroupBox("Sequence")
+        seq_form = _make_form()
+        seq_spin = _make_spin(cp.data_col)
+        seq_form.addRow("DELAY:", self._col_spin_with_letter(seq_spin))
+        seq_grp.setLayout(seq_form)
+        lay.addWidget(seq_grp)
+
+        # ── Monotony P ──
+        p_grp = QGroupBox("Monotony P")
+        p_form = _make_form()
+        p_spins = []
+        for label, col in zip(['TOP', 'BASE', 'MAX', 'MIN'], cp.mono_p_cols):
+            sp = _make_spin(col); p_spins.append(sp)
+            p_form.addRow(label + ':', self._col_spin_with_letter(sp))
+        p_grp.setLayout(p_form)
+        lay.addWidget(p_grp)
+
+        # ── Monotony N ──
+        n_grp = QGroupBox("Monotony N")
+        n_form = _make_form()
+        n_spins = []
+        for label, col in zip(['TOP', 'BASE', 'MAX', 'MIN'], cp.mono_n_cols):
+            sp = _make_spin(col); n_spins.append(sp)
+            n_form.addRow(label + ':', self._col_spin_with_letter(sp))
+        n_grp.setLayout(n_form)
+        lay.addWidget(n_grp)
+
+        btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        btns.accepted.connect(dlg.accept)
+        btns.rejected.connect(dlg.reject)
+        lay.addWidget(btns)
+
+        if dlg.exec() == QDialog.Accepted:
+            cp.data_col = seq_spin.value()
+            cp.mono_p_cols = [s.value() for s in p_spins]
+            cp.mono_n_cols = [s.value() for s in n_spins]
+            print(f"[MainWindow] Data cols: seq={self._col_to_letter(cp.data_col)}, "
+                  f"monoP={[self._col_to_letter(c) for c in cp.mono_p_cols]}, "
+                  f"monoN={[self._col_to_letter(c) for c in cp.mono_n_cols]}")
+
+    def _set_pic_cols(self):
+        """Open dialog to set picture insertion columns (Sequence + Monotony P/N)."""
+        from PySide6.QtWidgets import (QDialog, QFormLayout, QSpinBox,
+                                        QDialogButtonBox, QVBoxLayout, QGroupBox)
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Picture Columns")
+        lay = QVBoxLayout(dlg)
+        cp = self.config_panel
+
+        def _make_spin(val):
+            sp = QSpinBox(); sp.setRange(1, 99); sp.setValue(val); return sp
+
+        def _make_form():
+            f = QFormLayout()
+            f.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            f.setSpacing(6)
+            return f
+
+        # ── Sequence ──
+        seq_grp = QGroupBox("Sequence")
+        seq_form = _make_form()
+        seq_spin = _make_spin(cp.seq_pic_col)
+        seq_form.addRow("Picture:", self._col_spin_with_letter(seq_spin))
+        seq_grp.setLayout(seq_form)
+        lay.addWidget(seq_grp)
+
+        # ── Monotony P ──
+        p_grp = QGroupBox("Monotony P")
+        p_form = _make_form()
+        p_spin = _make_spin(cp.mono_p_pic_col)
+        p_form.addRow("Picture:", self._col_spin_with_letter(p_spin))
+        p_grp.setLayout(p_form)
+        lay.addWidget(p_grp)
+
+        # ── Monotony N ──
+        n_grp = QGroupBox("Monotony N")
+        n_form = _make_form()
+        n_spin = _make_spin(cp.mono_n_pic_col)
+        n_form.addRow("Picture:", self._col_spin_with_letter(n_spin))
+        n_grp.setLayout(n_form)
+        lay.addWidget(n_grp)
+
+        btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        btns.accepted.connect(dlg.accept)
+        btns.rejected.connect(dlg.reject)
+        lay.addWidget(btns)
+
+        if dlg.exec() == QDialog.Accepted:
+            cp.seq_pic_col = seq_spin.value()
+            cp.mono_p_pic_col = p_spin.value()
+            cp.mono_n_pic_col = n_spin.value()
+            print(f"[MainWindow] Picture cols: seq={self._col_to_letter(cp.seq_pic_col)}, "
+                  f"monoP={self._col_to_letter(cp.mono_p_pic_col)}, "
+                  f"monoN={self._col_to_letter(cp.mono_n_pic_col)}")
 
     def _set_init_row(self):
         """Open dialog to set initial row number."""
@@ -619,14 +769,19 @@ class MainWindow(QMainWindow):
             self._show_save_error("Save Excel", e)
 
     def _on_save_pic(self):
-        """Save screenshot to local + scope. No Excel data writing."""
+        """Save screenshot to local disk. Insert into Excel / save to Scope per checkboxes."""
         if not self.state.pic_path:
             self._warn("Save Picture", "Please select a picture save folder first (File Paths → Pic).")
             return
         if not self.state.osc:
             self._warn("Save Picture", "Please connect to an oscilloscope first.")
             return
+        do_excel = self.config_panel.save_to_excel_cb.isChecked()
+        if do_excel and not self.state.xls:
+            self._warn("Save Picture", "Save to Excel is checked but no Excel file is loaded.\nUse Reload Excel first.")
+            return
         try:
+            do_scope = self.config_panel.save_to_scope_cb.isChecked()
             capture.Capture_Pic(
                 self.state.osc, self.state.xls,
                 self.state.sheet_name or "Sheet1",
@@ -634,11 +789,23 @@ class MainWindow(QMainWindow):
                 [self.config_panel.signal_enables[i].isChecked() for i in range(4)],
                 self.state.test_type, self.state.flag_monotony_direction,
                 self.state.row, self.state.mso5, self.state.pic_path,
-                self.state.project_name, save_to_excel=False,
-                save_to_scope=self.config_panel.save_to_scope_cb.isChecked()
+                self.state.project_name,
+                save_pic=True, save_data=False,
+                save_to_excel=do_excel, save_to_scope=do_scope,
+                data_col=self.config_panel.data_col,
+                mono_p_cols=self.config_panel.mono_p_cols,
+                mono_n_cols=self.config_panel.mono_n_cols,
+                pic_cols=(self.config_panel.seq_pic_col,
+                          self.config_panel.mono_p_pic_col,
+                          self.config_panel.mono_n_pic_col),
             )
-            self.state.set_status("Picture saved to local" +
-                (" + Scope" if self.config_panel.save_to_scope_cb.isChecked() else ""))
+            parts = ["Picture saved to local"]
+            if do_excel:
+                parts.append("Excel")
+            if do_scope:
+                parts.append("Scope")
+            self.state.set_status(" + ".join(parts))
+            self.config_panel.remember_current_sheet_config()
         except Exception as e:
             self._show_save_error("Save Picture", e)
 
@@ -658,10 +825,17 @@ class MainWindow(QMainWindow):
                 [self.config_panel.signal_enables[i].isChecked() for i in range(4)],
                 self.state.test_type, self.state.flag_monotony_direction,
                 self.state.row, self.state.mso5, self.state.pic_path,
-                self.state.project_name, save_to_excel=True, save_pic=False,
-                save_to_scope=self.config_panel.save_to_scope_cb.isChecked()
+                self.state.project_name,
+                save_pic=False, save_data=True,
+                data_col=self.config_panel.data_col,
+                mono_p_cols=self.config_panel.mono_p_cols,
+                mono_n_cols=self.config_panel.mono_n_cols,
+                pic_cols=(self.config_panel.seq_pic_col,
+                          self.config_panel.mono_p_pic_col,
+                          self.config_panel.mono_n_pic_col),
             )
             self.state.set_status("Data saved to Excel")
+            self.config_panel.remember_current_sheet_config()
         except Exception as e:
             self._show_save_error("Save Data", e)
 
@@ -671,6 +845,7 @@ class MainWindow(QMainWindow):
             self._warn("Save Pic+Data", "Please connect to an oscilloscope first.")
             return
         try:
+            do_scope = self.config_panel.save_to_scope_cb.isChecked()
             capture.Capture_Pic(
                 self.state.osc, self.state.xls,
                 self.state.sheet_name or "Sheet1",
@@ -678,10 +853,18 @@ class MainWindow(QMainWindow):
                 [self.config_panel.signal_enables[i].isChecked() for i in range(4)],
                 self.state.test_type, self.state.flag_monotony_direction,
                 self.state.row, self.state.mso5, self.state.pic_path,
-                self.state.project_name, save_to_excel=True, save_pic=True,
-                save_to_scope=self.config_panel.save_to_scope_cb.isChecked()
+                self.state.project_name,
+                save_pic=True, save_data=True,
+                save_to_excel=True, save_to_scope=do_scope,
+                data_col=self.config_panel.data_col,
+                mono_p_cols=self.config_panel.mono_p_cols,
+                mono_n_cols=self.config_panel.mono_n_cols,
+                pic_cols=(self.config_panel.seq_pic_col,
+                          self.config_panel.mono_p_pic_col,
+                          self.config_panel.mono_n_pic_col),
             )
             self.state.set_status("Picture + Data saved")
+            self.config_panel.remember_current_sheet_config()
         except Exception as e:
             self._show_save_error("Save Pic+Data", e)
 
@@ -708,41 +891,211 @@ class MainWindow(QMainWindow):
                     labels.append(None)  # disabled
             measurement.channel_Lable_set(
                 self.state.osc,
-                labels[0], labels[1], labels[2], labels[3]
+                labels[0], labels[1], labels[2], labels[3],
+                label_x=self.config_panel.ch_label_x,
+                label_y=self.config_panel.ch_label_y,
             )
             self.state.set_status("Labels set on instrument")
         except Exception as e:
             self._handle_connection_error(e, "Set Label")
 
+    def _set_mso_horizontal(self):
+        """Settings → MSO Horizontal: dialog to configure scope horizontal parameters."""
+        from PySide6.QtWidgets import (QDialog, QFormLayout, QComboBox,
+                                        QDialogButtonBox, QVBoxLayout, QDoubleSpinBox, QSpinBox)
+        cp = self.config_panel
+        dlg = QDialog(self)
+        dlg.setWindowTitle("MSO Horizontal Setup")
+        lay = QVBoxLayout(dlg)
+        form = QFormLayout()
+
+        mode_combo = QComboBox()
+        mode_combo.addItems(["AUTO", "MANUAL"])
+        mode_combo.setCurrentText(cp.hor_mode)
+        form.addRow("Mode:", mode_combo)
+
+        scale_spin = QDoubleSpinBox()
+        scale_spin.setRange(0.000001, 100.0)
+        scale_spin.setDecimals(6)
+        scale_spin.setValue(cp.hor_scale)
+        scale_spin.setSuffix(" s/div")
+        form.addRow("Scale:", scale_spin)
+
+        pos_spin = QSpinBox()
+        pos_spin.setRange(0, 100)
+        pos_spin.setValue(cp.hor_pos)
+        pos_spin.setSuffix(" %")
+        form.addRow("Position:", pos_spin)
+
+        lay.addLayout(form)
+        btns = QDialogButtonBox(
+            QDialogButtonBox.Apply | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        btns.accepted.connect(dlg.accept)
+        btns.rejected.connect(dlg.reject)
+        lay.addWidget(btns)
+
+        def _apply():
+            cp.hor_mode = mode_combo.currentText()
+            cp.hor_scale = scale_spin.value()
+            cp.hor_pos = pos_spin.value()
+            if self.state.osc:
+                osc = self.state.osc
+                osc.hormode(cp.hor_mode)
+                osc.write(f'HORIZONTAL:MODE:SCALE {cp.hor_scale:g}')
+                osc.horpos(cp.hor_pos)
+                self.state.set_status(f"Horizontal: {cp.hor_mode} {cp.hor_scale:g}s/div {cp.hor_pos}%")
+            print(f"[MainWindow] MSO HOR: mode={cp.hor_mode}, scale={cp.hor_scale:g}, pos={cp.hor_pos}")
+
+        btns.button(QDialogButtonBox.Apply).clicked.connect(_apply)
+        if dlg.exec() == QDialog.Accepted:
+            _apply()
+
+    def _set_mso_channels(self):
+        """Settings → MSO Channel Setup: dialog to configure per-channel pos/scale."""
+        from PySide6.QtWidgets import (QDialog, QFormLayout,
+                                        QDialogButtonBox, QVBoxLayout, QHBoxLayout,
+                                        QDoubleSpinBox)
+        cp = self.config_panel
+        dlg = QDialog(self)
+        dlg.setWindowTitle("MSO Channel Setup")
+        lay = QVBoxLayout(dlg)
+        form = QFormLayout()
+
+        pos_spins = []
+        scale_spins = []
+        for i, ch_name in enumerate(["CH1", "CH2", "CH3", "CH4"]):
+            pos_spin = QDoubleSpinBox()
+            pos_spin.setRange(-20, 20); pos_spin.setDecimals(1)
+            pos_spin.setValue(cp.ch_pos[i]); pos_spin.setSuffix(" div")
+            pos_spins.append(pos_spin)
+
+            scale_spin = QDoubleSpinBox()
+            scale_spin.setRange(0.001, 100.0); scale_spin.setDecimals(3)
+            scale_spin.setValue(cp.ch_scale[i]); scale_spin.setSuffix(" V/div")
+            scale_spins.append(scale_spin)
+
+            row = QHBoxLayout()
+            row.addWidget(pos_spin)
+            row.addWidget(scale_spin)
+            form.addRow(f"{ch_name} Pos / Scale:", row)
+
+        lay.addLayout(form)
+        btns = QDialogButtonBox(
+            QDialogButtonBox.Apply | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        btns.accepted.connect(dlg.accept)
+        btns.rejected.connect(dlg.reject)
+        lay.addWidget(btns)
+
+        def _apply():
+            for i in range(4):
+                cp.ch_pos[i] = pos_spins[i].value()
+                cp.ch_scale[i] = scale_spins[i].value()
+            if self.state.osc:
+                osc = self.state.osc
+                ch_enables = [cp.ch_enables[i].isChecked() for i in range(4)]
+                for i, ch_name in enumerate(['CH1', 'CH2', 'CH3', 'CH4']):
+                    if ch_enables[i]:
+                        osc.chanset(ch_name, cp.ch_pos[i], 0, '1.0000E+09', cp.ch_scale[i])
+                self.state.set_status("Channel setup applied")
+            print(f"[MainWindow] MSO CH: pos={cp.ch_pos}, scale={cp.ch_scale}")
+
+        btns.button(QDialogButtonBox.Apply).clicked.connect(_apply)
+        if dlg.exec() == QDialog.Accepted:
+            _apply()
+
+    def _set_label_position(self):
+        """Settings → Set Label Position: dialog to configure per-channel label X/Y."""
+        from PySide6.QtWidgets import (QDialog, QFormLayout, QLabel,
+                                        QDialogButtonBox, QVBoxLayout, QHBoxLayout,
+                                        QSpinBox)
+        cp = self.config_panel
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Label Position")
+        lay = QVBoxLayout(dlg)
+        form = QFormLayout()
+
+        x_spins = []
+        y_spins = []
+        for i, ch_name in enumerate(["CH1", "CH2", "CH3", "CH4"]):
+            x_spin = QSpinBox()
+            x_spin.setRange(0, 100); x_spin.setValue(cp.ch_label_x[i])
+            x_spins.append(x_spin)
+            y_spin = QSpinBox()
+            y_spin.setRange(0, 100); y_spin.setValue(cp.ch_label_y[i])
+            y_spins.append(y_spin)
+
+            row = QHBoxLayout()
+            row.addWidget(QLabel("X:")); row.addWidget(x_spin)
+            row.addWidget(QLabel("Y:")); row.addWidget(y_spin)
+            row.addStretch()
+            form.addRow(f"{ch_name}:", row)
+
+        lay.addLayout(form)
+        btns = QDialogButtonBox(
+            QDialogButtonBox.Apply | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        btns.accepted.connect(dlg.accept)
+        btns.rejected.connect(dlg.reject)
+        lay.addWidget(btns)
+
+        def _apply():
+            for i in range(4):
+                cp.ch_label_x[i] = x_spins[i].value()
+                cp.ch_label_y[i] = y_spins[i].value()
+            print(f"[MainWindow] Label pos: x={cp.ch_label_x}, y={cp.ch_label_y}")
+            # Re-apply labels to scope with new positions
+            self._on_set_label()
+
+        btns.button(QDialogButtonBox.Apply).clicked.connect(_apply)
+        if dlg.exec() == QDialog.Accepted:
+            _apply()
+
     def _on_set_mso(self):
+        """One-click full oscilloscope configuration."""
         if not self.state.osc:
             self._warn("Set MSO", "Please connect to an oscilloscope first.")
             return
 
         try:
             osc = self.state.osc
+            cp = self.config_panel
             is_monotony = self.state.test_type == "monotony"
 
             osc.write('FACTORY')
             osc.write('DISplay:WAVEView1:VIEWStyle OVErlay')
 
-            if is_monotony:
-                osc.channel_state('ON', 'OFF', 'OFF', 'OFF')
-                osc.chanset('CH1', -2.5, 0, '1.0000E+09', 1)
-                measurement.measure6(osc, self.state.mso5)
-            else:  # sequence
-                osc.channel_state('ON', 'ON', 'OFF', 'OFF')
-                osc.chanset('CH1', -2.5, 0, '1.0000E+09', 1)
-                osc.chanset('CH2', -3.5, 0, '1.0000E+09', 1)
-                measurement.measure1(osc, self.state.mso5)
+            # Channel states from UI enable checkboxes
+            ch_enables = [cp.ch_enables[i].isChecked() for i in range(4)]
+            osc.channel_state(
+                'ON' if ch_enables[0] else 'OFF',
+                'ON' if ch_enables[1] else 'OFF',
+                'ON' if ch_enables[2] else 'OFF',
+                'ON' if ch_enables[3] else 'OFF',
+            )
 
-            osc.write('HORIZONTAL:MODE AUTO')
-            osc.write('HORIZONTAL:MODE:SCALE 1e-2')
-            osc.write('HORIZONTAL:POSITION 30')
+            # Configure enabled channels with saved attributes
+            for i, ch_name in enumerate(['CH1', 'CH2', 'CH3', 'CH4']):
+                if ch_enables[i]:
+                    osc.chanset(ch_name, cp.ch_pos[i], 0, '1.0000E+09', cp.ch_scale[i])
+
+            # Measurement (depends on test type)
+            if is_monotony:
+                measurement.measure_monotony(osc, self.state.mso5)
+            else:  # sequence
+                measurement.measure_sequence(osc, self.state.mso5)
+
+            # Horizontal
+            osc.hormode(cp.hor_mode)
+            osc.write(f'HORIZONTAL:MODE:SCALE {cp.hor_scale:g}')
+            osc.horpos(cp.hor_pos)
 
             osc.state('run')
-            self.state.set_status("MSO configured")
-            print(f"[MainWindow] MSO configured as {self.state.test_type}")
+            self.state.set_status("MSO configured (one-click)")
+            print(f"[MainWindow] One-click MSO: type={self.state.test_type}, "
+                  f"hor={cp.hor_mode}/{cp.hor_scale:g}s/{cp.hor_pos}%, "
+                  f"ch_pos={cp.ch_pos}, ch_scale={cp.ch_scale}")
+
+            # Auto-set labels after MSO configuration
+            self._on_set_label()
 
         except Exception as e:
             self._show_save_error("Set MSO", e)
@@ -825,26 +1178,24 @@ class MainWindow(QMainWindow):
     def _update_state_from_dict(self, state_dict):
         self.state.row = state_dict.get('row', self.state.row)
         self.state.flag_monotony_direction = state_dict.get('flag_monotony_direction', self.state.flag_monotony_direction)
-        self.state.signal1_name = state_dict.get('signal1_name', '')
-        self.state.signal2_name = state_dict.get('signal2_name', '')
-        self.state.signal3_name = state_dict.get('signal3_name', '')
-        self.state.signal4_name = state_dict.get('signal4_name', '')
-
-        self.state.signal1 = self.state.signal1_name
-        self.state.signal2 = self.state.signal2_name
-        self.state.signal3 = self.state.signal3_name
-        self.state.signal4 = self.state.signal4_name
         self.state.pn_direction = state_dict.get('pn_direction', self.state.pn_direction)
         self.state.current_item = state_dict.get('current_item', self.state.current_item)
 
-        # Sync R: only for enabled signals; disabled keep their default value
+        # Sync R: spinboxes to new row, triggering read from Excel
         row = state_dict.get('excel_row', self.state.row)
         cp = self.config_panel
         for i in range(4):
             if cp.signal_enables[i].isChecked():
-                cp.signal_rows[i].blockSignals(True)
                 cp.signal_rows[i].setValue(row)
-                cp.signal_rows[i].blockSignals(False)
+
+        # Re-read signal values from Excel at the new row
+        cp._read_initial_signals()
+        # Sync CH labels to follow signal values
+        for i in range(4):
+            if cp.ch_enables[i].isChecked():
+                sig_val = getattr(self.state, f'signal{i + 1}', '')
+                cp.ch_edits[i].setText(sig_val)
+                setattr(self.state, f'ch{i + 1}_label', sig_val)
 
     def _handle_connection_error(self, error, operation):
         """Handle errors that may indicate a lost connection.
