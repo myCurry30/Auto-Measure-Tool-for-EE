@@ -144,9 +144,17 @@ token 过期时间默认 8 小时，可通过环境变量配置。
 
 ```
 # 认证（无需 token）
-POST   /api/auth/login           body: {pin: "xxxx"}
-  → 200 {token: "eyJ...", expires_at: "2026-07-02T22:00:00"}
-  → 401 {detail: "PIN 不正确"}
+POST   /api/auth/login           body: {username: "zhangsan", pin: "123456"}
+  → 200 {token: "eyJ...", expires_at: "2026-07-02T22:00:00", role: "operator"}
+  → 401 {detail: "用户名或 PIN 不正确"}
+  → 403 {detail: "MAC 地址未注册，当前设备未授权"}
+  → 425 {detail: "正在获取设备信息，请重试"}  ← ARP 未命中，前端自动重试
+
+# 用户管理（需 admin role）
+GET    /api/auth/users           → 列出所有用户（不含 pin_hash）
+POST   /api/auth/users           body: {username, pin, role, mac_addresses}
+PUT    /api/auth/users/{name}    body: {pin?, role?, mac_addresses?}
+DELETE /api/auth/users/{name}    → 删除用户
 
 # 连接管理
 POST   /api/connect              body: {method, ip?, port?, use_socket?}
@@ -210,40 +218,95 @@ POST   /api/config/apply         body: {sheet_name} → 应用某 sheet 的保�
 
 前后端只通过 JWT token 通信，前端完全不感知后端如何验证身份。将来从 PIN 切换到 LDAP/AD 时，前端零改动。
 
-### 6.2 阶段 1：PIN 码认证
+### 6.2 阶段 1：用户名 + PIN + MAC 地址三重验证
 
-**PIN 管理方式**：管理员通过配置文件管控，不是用户注册。
-
-- 初始 PIN 在服务器打包/部署时预设，写入 `user_pins.json`
-- 管理员可以直接编辑服务器上的 `user_pins.json` 增删用户
-- 或在 Web 设置页（需 admin 角色登录后可见）修改
+**管理方式**：管理员预设用户名和对应笔记本的 MAC 地址到 `user_pins.json`。不是用户自己注册。
 
 ```json
-// user_pins.json — 存储在服务器上
+// user_pins.json — 管理员维护在服务器上
 {
-  "admin": {"pin_hash": "$2b$12$...", "role": "admin"},
-  "zhangsan": {"pin_hash": "$2b$12$...", "role": "operator"},
-  "lisi": {"pin_hash": "$2b$12$...", "role": "operator"}
+  "zhangsan": {
+    "pin_hash": "$2b$12$...",
+    "role": "operator",
+    "mac_addresses": ["00:1A:2B:3C:4D:5E"]
+  },
+  "lisi": {
+    "pin_hash": "$2b$12$...",
+    "role": "operator",
+    "mac_addresses": ["AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66"]
+  },
+  "admin": {
+    "pin_hash": "$2b$12$...",
+    "role": "admin",
+    "mac_addresses": ["00:11:22:33:44:55"]
+  }
 }
 ```
 
+每个用户可绑定多个 MAC 地址（如笔记本有线 + 无线网卡）。
+
+**登录流程**：
+
 ```
-工程师浏览器                   服务器
-  │                            │
-  │  POST /api/auth/login      │
-  │  {username: "zhangsan",    │
-  │   pin: "123456"}           │
-  │ ─────────────────────────→ │
-  │                            │ user_pins.json["zhangsan"].pin_hash
-  │                            │ bcrypt 比对 → 通过
-  │  200 {token, expires_at,   │
-  │        role: "operator"}   │
-  │ ←───────────────────────── │
-  │                            │
-  │  后续所有请求               │
-  │  Authorization: Bearer xxx │
-  │ ─────────────────────────→ │ 验证 JWT，注入 username → SessionManager
+工程师浏览器                         服务器
+  │                                  │
+  │  POST /api/auth/login            │
+  │  {username: "zhangsan",          │
+  │   pin: "123456"}                 │
+  │ ───────────────────────────────→ │
+  │                                  │ 1. 从 TCP 连接取客户端 IP
+  │                                  │    client_ip = request.client.host
+  │                                  │
+  │                                  │ 2. 查 ARP 表获取 MAC
+  │                                  │    arp -a <client_ip>
+  │                                  │    → "00-1a-2b-3c-4d-5e"
+  │                                  │
+  │                                  │ 3. 三重校验:
+  │                                  │    ✓ user_pins.json 中有 "zhangsan"
+  │                                  │    ✓ bcrypt(pin) 匹配 pin_hash
+  │                                  │    ✓ MAC 在 mac_addresses 列表中
+  │                                  │
+  │  200 {token, expires_at,         │
+  │        role: "operator"}         │
+  │ ←─────────────────────────────── │
+  │                                  │
+  │  后续请求 Header:                 │
+  │  Authorization: Bearer xxx       │
+  │ ───────────────────────────────→ │ 验证 JWT → 注入 username → SessionManager
 ```
+
+**ARP 解析实现**（后端用 `subprocess` 调系统命令，不走前端）：
+
+```python
+import subprocess, re
+
+def get_mac_from_ip(ip: str) -> str | None:
+    """通过 ARP 表解析 IP → MAC 地址（Windows）。"""
+    try:
+        result = subprocess.run(
+            ['arp', '-a', ip],
+            capture_output=True, text=True, timeout=5
+        )
+        # Windows 输出: "192.168.1.100    00-1a-2b-3c-4d-5e    dynamic"
+        match = re.search(
+            r'([0-9A-Fa-f]{2}[-:][0-9A-Fa-f]{2}[-:][0-9A-Fa-f]{2}'
+            r'[-:][0-9A-Fa-f]{2}[-:][0-9A-Fa-f]{2}[-:][0-9A-Fa-f]{2})',
+            result.stdout
+        )
+        if match:
+            return match.group(1).replace('-', ':').upper()
+    except Exception:
+        pass
+    return None
+```
+
+**ARP 缓存预热**：首次请求时 ARP 表中可能没有该 IP 的记录。登录失败时返回特定错误码，前端触发重试（最多 3 次，间隔 2 秒）。或者后端先 ping 一下客户端 IP 触发 ARP 学习。
+
+**容错说明**：
+- ARP 表只能解析**同一子网**内的 IP（局域网天然满足）
+- 客户端 IP 是内网地址（如 192.168.x.x），不会被 NAT 混淆
+- 如果 DHCP 分配导致 IP 变化，MAC 不变，仍然能匹配
+- 用户换了笔记本需要找管理员更新 `mac_addresses` 列表
 
 - JWT payload: `{sub: "zhangsan", role: "operator", iat, exp}`
 - 每个用户的示波器连接、Excel 实例、测量进度完全隔离
@@ -391,6 +454,8 @@ FastAPI 默认在事件循环中运行，但 VISA 和 COM 操作都是阻塞调�
 | 前端打包复杂（npm + Python 双构建） | 开发阶段 Vite dev server 独立运行；生产打包用 PyInstaller 将 React 产物嵌入 FastAPI 静态文件服务 |
 | `logger.py` 修改影响桌面版 | 不修改 logger.py，新增 `web/server/log_bridge.py` 独立管理 WebSocket 日志管道 |
 | 服务器单点故障（所有工程师依赖同一台服务器） | 服务器宕机期间工程师可临时用桌面版；Web 版与桌面版共享 core/ 层，互不影响 |
+| ARP 缓存未命中导致 MAC 验证失败（首次登录或 ARP 过期） | 后端返回 425 状态码，前端自动重试（最多 3 次 × 2s 间隔）；后端可先 ping 目标 IP 预热 ARP |
+| 客户端 IP 跨子网导致 ARP 解析不到 MAC | 约束服务器和所有工程师 PC 必须在同一 VLAN/子网（企业内网环境天然满足） |
 
 ---
 
@@ -400,4 +465,5 @@ FastAPI 默认在事件循环中运行，但 VISA 和 COM 操作都是阻塞调�
 - ❌ Docker 容器化
 - ❌ Excel COM 以外的备选后端（openpyxl）
 - ❌ 移动端适配
+- ❌ 跨 VLAN/子网部署（ARP MAC 检测依赖同一子网）
 - ❌ 自动发现局域网内的示波器（仍由用户手动输入地址）
