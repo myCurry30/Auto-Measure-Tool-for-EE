@@ -10,16 +10,17 @@
 
 将现有 PySide6 桌面应用改造为 Web 架构，用户在浏览器中完成示波器自动测量工作。桌面版保持不动，Web 版在新分支独立开发。
 
-**使用场景**: 单机本地使用 — 后端跑在工程师本机，浏览器访问 `localhost`，VISA 和 Excel COM 操作均在本机完成。
+**使用场景**: 局域网多人使用 — 一台 Windows 服务器部署后端（需安装 NI-VISA + Excel），绑定固定 LAN IP。工程师在各自 PC 的浏览器中访问同一地址，各自输入示波器 IP/GPIB 连接到不同的示波器。
 
 **范围**:
 - 完整移植现有功能：示波器连接、Sequence/Monotony 测量、Excel 读写、配置管理、用户手册
+- 多人并发使用（每人独立会话，独立示波器连接 + 独立 Excel 实例）
+- PIN 码登录认证
 - 不新增测量类型或示波器型号
 - 不改变 `core/` 层业务逻辑
 
 **不做**:
-- 远程/多用户访问
-- 数据库持久化（配置仍用 JSON 文件）
+- 数据库持久化（配置仍用 JSON 文件，用户 PIN 用配置文件）
 - Excel COM 以外的替代方案
 
 ---
@@ -42,33 +43,40 @@
 ## 3. 整体架构
 
 ```
-工程师本机 (Windows)
+局域网 ─────────────────────────────────────────────────────────────
 │
-├─ 浏览器 (localhost:5173)     ← React + Ant Design SPA
-│   ├─ 连接配置面板
-│   ├─ 测量控制面板 (Last/Next/Jump)
-│   ├─ 信号与通道配置
-│   ├─ 实时日志/状态
-│   └─ 用户操作手册
+│  工程师 A (PC)              工程师 B (PC)
+│  ├─ 浏览器                   ├─ 浏览器
+│  │  http://192.168.1.50      │  http://192.168.1.50
+│  │  连接 → 示波器 A           │  连接 → 示波器 B
+│  │                              │
+│  │       ┌──────────────────────┘
+│  │       ▼
+│  ┌──────────────────────────────────────────────┐
+│  │  服务器 PC (固定 LAN IP: 192.168.1.50)        │
+│  │  Windows + NI-VISA + Excel                    │
+│  │                                                │
+│  │  FastAPI 后端 (bind 0.0.0.0:8000)              │
+│  │  ├─ SessionManager   ← 每用户独立会话          │
+│  │  │   ├─ 用户 A: osc_A + xls_A                 │
+│  │  │   └─ 用户 B: osc_B + xls_B                 │
+│  │  ├─ /api/auth         → 登录/PIN 管理          │
+│  │  ├─ /api/connect      → VISA 连接/断开/心跳     │
+│  │  ├─ /api/measure      → 测量 + 采集            │
+│  │  ├─ /api/excel        → Excel 读写             │
+│  │  ├─ /api/config       → 配置导入/导出           │
+│  │  └─ WebSocket /ws     → 实时推送（按用户隔离）   │
+│  │                                                │
+│  │  core/ 业务层（复用现有代码）                    │
+│  │  每个用户会话持有独立的 osc + xls 实例          │
+│  │                                                │
+│  └──────────────────────────────────────────────┘
+│              │                    │
+│      VISA/TCPIP            GPIB/USB
+│              │                    │
+│       示波器 A              示波器 B
 │
-├─ FastAPI 后端 (localhost:8000)
-│   ├─ /api/connect        → VISA 连接/断开/心跳
-│   ├─ /api/measure        → 触发测量 + 采集
-│   ├─ /api/excel          → Excel 读写状态
-│   ├─ /api/config         → 配置导入/导出
-│   └─ WebSocket /ws       → 实时推送（测量进度、心跳、日志）
-│
-├─ core/ 业务层（复用现有代码）
-│   ├─ instrument_manager  → VISA 扫描/连接/识别
-│   ├─ osc_*.py            → 示波器驱动
-│   ├─ measurement.py      → measure_sequence / measure_monotony
-│   ├─ capture.py          → Capture_Pic / savepic
-│   ├─ easy_excel.py       → win32com Excel 操作
-│   └─ test_manager.py     → 导航逻辑
-│
-└─ 系统依赖
-    ├─ Excel.exe           ← win32com 操控
-    └─ NI-VISA              ← PyVISA 后端
+└──────────────────────────────────────────────────────────────────
 ```
 
 ---
@@ -107,9 +115,23 @@
 
 ### 4.3 状态管理
 
-- **React Context** 管理全局状态: 连接态、当前测量进度、配置
-- **useReducer** 处理复杂状态转换（连接中 → 已连接 → 断开中）
-- **WebSocket Context** 提供日志流和实时通知，各页面按需消费
+**前端**: React Context + useReducer 管理全局状态（连接态、测量进度、配置），WebSocket 按用户推送。
+
+**后端**: `SessionManager` 单例维护 `{username → UserSession}` 字典：
+
+```python
+class UserSession:
+    osc: OscilloscopeBase | None    # 当前连接的示波器驱动实例
+    xls: EasyExcel | None           # 当前打开的 Excel 实例
+    rm: ResourceManager | None      # 此用户的 VISA 资源管理器
+    test_type: str                  # "sequence" | "monotony"
+    row: int                        # 当前测量行
+    state: dict                     # 测量上下文（signal*, ch*, pn_direction...）
+    config: dict                    # 用户当前配置
+    log_queue: asyncio.Queue        # 此用户的日志队列（推送到 WS）
+```
+
+每个工程师登录后获得独立会话。连接到哪个示波器、打开哪个 Excel，完全隔离，互不影响。
 
 ---
 
@@ -154,27 +176,31 @@ POST   /api/config/export        body: {file_path}  → 导出到 JSON 文件
 POST   /api/config/apply         body: {sheet_name} → 应用某 sheet 的保存配置
 ```
 
-### 5.2 WebSocket (`/ws`)
+### 5.2 WebSocket (`/ws?token=<jwt>`)
 
-服务器主动推送事件，JSON 格式：
+连接时传 JWT 参数，后端按 `username` 路由到对应用户的日志队列。每个用户只收到自己操作的推送：
 
 ```json
 {"type": "log", "level": "info", "message": "测量完成: VCCIN_1.8V", "ts": "14:32:01"}
-{"type": "heartbeat", "connected": true, "model": "MSO58"}
+{"type": "heartbeat", "connected": true, "model": "MSO58", "scope_addr": "TCPIP0::192.168.1.100::INSTR"}
 {"type": "progress", "current": 12, "total": 45, "item": "VCCIN_1.8V", "status": "ok"}
 {"type": "excel", "event": "cell_updated", "row": 15, "col": "D"}
 ```
 
 ### 5.3 后端状态模型
 
-后端维护单例 `AppState`（从现有 `app/state.py` 简化而来，去掉 Qt 信号，改用普通属性 + 锁）：
+`SessionManager` 是全局单例，维护 `{username → UserSession}` 字典。每个 `UserSession` 独立持有：
 
-- 连接状态: `connected`, `osc_model`, `osc` 实例
-- Excel 状态: `xls` 实例, `file_path`, `sheet_name`
+- 连接状态: `connected`, `osc` 实例（可以是不同型号的驱动）
+- Excel 状态: `xls` 实例, `file_path`, `sheet_name`（各自打开不同的 Excel 文件）
 - 测量状态: `test_type`, `row`, `total`, `current_item`, `pn_direction`
 - 配置: 所有 `ConfigPanel` 对应的设置项
 
-所有状态变更通过 WebSocket 广播到前端，确保 UI 始终与后端同步。
+**并发安全**：
+- 每个 `UserSession` 内部操作是串行的（单用户单线程）
+- 不同 `UserSession` 之间完全独立，VISA 连接和 Excel 实例互不冲突
+- 全局配置文件和 `user_pins.json` 的读写用 `threading.Lock` 保护
+- 测量操作用 `asyncio.to_thread()` 包装，防止阻塞事件循环
 
 ---
 
@@ -186,57 +212,76 @@ POST   /api/config/apply         body: {sheet_name} → 应用某 sheet 的保�
 
 ### 6.2 阶段 1：PIN 码认证
 
+**PIN 管理方式**：管理员通过配置文件管控，不是用户注册。
+
+- 初始 PIN 在服务器打包/部署时预设，写入 `user_pins.json`
+- 管理员可以直接编辑服务器上的 `user_pins.json` 增删用户
+- 或在 Web 设置页（需 admin 角色登录后可见）修改
+
+```json
+// user_pins.json — 存储在服务器上
+{
+  "admin": {"pin_hash": "$2b$12$...", "role": "admin"},
+  "zhangsan": {"pin_hash": "$2b$12$...", "role": "operator"},
+  "lisi": {"pin_hash": "$2b$12$...", "role": "operator"}
+}
 ```
-前端                          后端
+
+```
+工程师浏览器                   服务器
   │                            │
   │  POST /api/auth/login      │
-  │  {pin: "888888"}           │
+  │  {username: "zhangsan",    │
+  │   pin: "123456"}           │
   │ ─────────────────────────→ │
-  │                            │ config.json.pin_hash = bcrypt(pin)
-  │                            │ 比对 → 通过
-  │  200 {token, expires_at}   │
+  │                            │ user_pins.json["zhangsan"].pin_hash
+  │                            │ bcrypt 比对 → 通过
+  │  200 {token, expires_at,   │
+  │        role: "operator"}   │
   │ ←───────────────────────── │
   │                            │
   │  后续所有请求               │
   │  Authorization: Bearer xxx │
-  │ ─────────────────────────→ │ 验证 JWT 签名 + 过期时间
+  │ ─────────────────────────→ │ 验证 JWT，注入 username → SessionManager
 ```
 
-- PIN 的 bcrypt hash 存在 `config.json` 中（初始值写死在代码里，用户可在配置页修改）
-- JWT payload: `{sub: "local_user", role: "admin", iat, exp}`
-- 单机单用户，role 固定为 `admin`
+- JWT payload: `{sub: "zhangsan", role: "operator", iat, exp}`
+- 每个用户的示波器连接、Excel 实例、测量进度完全隔离
+- token 过期默认 8 小时，可通过环境变量配置
 
 ### 6.3 阶段 3 扩展：LDAP/AD
 
 后端改动范围仅为 `POST /api/auth/login` 的实现：
 
 ```python
-# 阶段 1: web/server/api/auth.py
+# 阶段 1: web/server/api/auth/pin.py
 class PinAuth:
-    def authenticate(self, pin: str) -> str | None:
-        # bcrypt 比对 config.json 中的 pin_hash
+    def authenticate(self, username: str, pin: str) -> dict | None:
+        # 从 user_pins.json 读取 {pin_hash, role}
+        # bcrypt 比对 → 返回 {"role": "operator"} 或 None
 
-# 阶段 3: web/server/api/auth.py  （替换实现）
+# 阶段 3: web/server/api/auth/ldap.py  （替换实现）
 class LdapAuth:
     def __init__(self, server, domain, group_map):
         ...
-    def authenticate(self, username: str, password: str) -> str | None:
+    def authenticate(self, username: str, password: str) -> dict | None:
         # ldap3 验证 AD 账号
         # 根据 AD group 映射 role: Domain Admins→admin, Engineers→operator
-        # 返回 None 表示失败
+        # 返回 {"role": "operator", "display_name": "张三"} 或 None
 ```
 
-JWT payload 随之扩展：
+- 登录接口签名不变：`POST /api/auth/login {username, pin/password}`
+- 前端登录表单始终是 **用户名 + 密码/PIN** 两个字段（阶段 1 也一样用双字段，PIN 当密码用）
+- JWT payload 随之扩展：
 ```json
 // 阶段 1
-{"sub": "local_user", "role": "admin"}
+{"sub": "zhangsan", "role": "operator"}
 // 阶段 3
 {"sub": "zhangsan@nettrix.com", "role": "operator", "display_name": "张三"}
 ```
 
-前端路由守卫只需判断 `role`，三个阶段逻辑不变：
+前端路由守卫只需判断 `role`，两个阶段逻辑不变：
 ```typescript
-// 路由守卫 — 始终不变
 {role === 'admin' && <ConfigPage />}
 {role !== 'viewer' && <MeasureGoButton />}
 ```
@@ -339,18 +384,20 @@ FastAPI 默认在事件循环中运行，但 VISA 和 COM 操作都是阻塞调�
 
 | 风险 | 对策 |
 |---|---|
+| 多人同时连接不同示波器，VISA 资源冲突 | PyVISA ResourceManager 线程安全，每个 UserSession 独立创建 ResourceManager |
+| Excel COM 多实例同时运行 | `win32com.Dispatch()` 每次调用创建独立 Excel 进程，各用户互不干扰 |
 | VISA/COM 阻塞导致 WebSocket 断连 | `asyncio.to_thread()` 隔离阻塞操作；WS 心跳独立于测量线程 |
 | Excel COM 在无 GUI 环境下异常 | 后端启动时确保 Excel 以 Visible 模式打开 |
 | 前端打包复杂（npm + Python 双构建） | 开发阶段 Vite dev server 独立运行；生产打包用 PyInstaller 将 React 产物嵌入 FastAPI 静态文件服务 |
 | `logger.py` 修改影响桌面版 | 不修改 logger.py，新增 `web/server/log_bridge.py` 独立管理 WebSocket 日志管道 |
+| 服务器单点故障（所有工程师依赖同一台服务器） | 服务器宕机期间工程师可临时用桌面版；Web 版与桌面版共享 core/ 层，互不影响 |
 
 ---
 
 ## 10. 预设：不做的事情
 
-- ❌ ~~用户登录/权限系统~~（已纳入，见第 6 节）
-- ❌ 数据库（SQLite/PostgreSQL）
+- ❌ 数据库（SQLite/PostgreSQL）—— 配置仍用 JSON 文件
 - ❌ Docker 容器化
-- ❌ 远程访问（SSH 隧道是目前最简方案，不需要内网穿透）
 - ❌ Excel COM 以外的备选后端（openpyxl）
 - ❌ 移动端适配
+- ❌ 自动发现局域网内的示波器（仍由用户手动输入地址）
