@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import AppLayout from "./layouts/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import ConnectPage from "./pages/ConnectPage";
+import ConfigPage from "./pages/ConfigPage";
 
 // Placeholder pages for routes not yet implemented
 const Placeholder = ({ title }: { title: string }) => (
@@ -40,7 +41,7 @@ export default function App() {
               />
               <Route
                 path="/config"
-                element={<Placeholder title="Config" />}
+                element={<ConfigPage />}
               />
               <Route
                 path="/measure"
