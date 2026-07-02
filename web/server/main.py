@@ -29,10 +29,12 @@ app.add_middleware(
 from web.server.api.auth import router as auth_router
 from web.server.api.connect import router as connect_router
 from web.server.api.excel import router as excel_router
+from web.server.api.measure import router as measure_router
 
 app.include_router(auth_router)
 app.include_router(connect_router)
 app.include_router(excel_router)
+app.include_router(measure_router)
 
 
 @app.get("/api/health")
