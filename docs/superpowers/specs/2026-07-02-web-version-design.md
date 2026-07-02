@@ -144,16 +144,16 @@ token 过期时间默认 8 小时，可通过环境变量配置。
 
 ```
 # 认证（无需 token）
-POST   /api/auth/login           body: {username: "zhangsan", pin: "123456"}
-  → 200 {token: "eyJ...", expires_at: "2026-07-02T22:00:00", role: "operator"}
-  → 401 {detail: "用户名或 PIN 不正确"}
-  → 403 {detail: "MAC 地址未注册，当前设备未授权"}
+POST   /api/auth/login           body: {username: "zhangsan"}
+  → 200 {token: "eyJ...", expires_at: "2026-07-02T22:00:00", role: "operator", display_name: "张三"}
+  → 401 {detail: "用户名不存在"}
+  → 403 {detail: "当前设备未注册，MAC 地址不匹配"}
   → 425 {detail: "正在获取设备信息，请重试"}  ← ARP 未命中，前端自动重试
 
 # 用户管理（需 admin role）
-GET    /api/auth/users           → 列出所有用户（不含 pin_hash）
-POST   /api/auth/users           body: {username, pin, role, mac_addresses}
-PUT    /api/auth/users/{name}    body: {pin?, role?, mac_addresses?}
+GET    /api/auth/users           → 列出所有用户及其 MAC 绑定
+POST   /api/auth/users           body: {username, role, display_name, mac_addresses}
+PUT    /api/auth/users/{name}    body: {role?, display_name?, mac_addresses?}
 DELETE /api/auth/users/{name}    → 删除用户
 
 # 连接管理
@@ -218,25 +218,22 @@ POST   /api/config/apply         body: {sheet_name} → 应用某 sheet 的保�
 
 前后端只通过 JWT token 通信，前端完全不感知后端如何验证身份。将来从 PIN 切换到 LDAP/AD 时，前端零改动。
 
-### 6.2 阶段 1：用户名 + PIN + MAC 地址三重验证
+### 6.2 阶段 1：用户名 + MAC 地址自动验证
 
-**管理方式**：管理员预设用户名和对应笔记本的 MAC 地址到 `user_pins.json`。不是用户自己注册。
+**管理方式**：管理员预设用户名和对应笔记本的 MAC 地址到 `user_pins.json`。用户无需记 PIN，只需输入用户名即可登录。
 
 ```json
 // user_pins.json — 管理员维护在服务器上
 {
   "zhangsan": {
-    "pin_hash": "$2b$12$...",
     "role": "operator",
     "mac_addresses": ["00:1A:2B:3C:4D:5E"]
   },
   "lisi": {
-    "pin_hash": "$2b$12$...",
     "role": "operator",
     "mac_addresses": ["AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66"]
   },
   "admin": {
-    "pin_hash": "$2b$12$...",
     "role": "admin",
     "mac_addresses": ["00:11:22:33:44:55"]
   }
@@ -251,8 +248,7 @@ POST   /api/config/apply         body: {sheet_name} → 应用某 sheet 的保�
 工程师浏览器                         服务器
   │                                  │
   │  POST /api/auth/login            │
-  │  {username: "zhangsan",          │
-  │   pin: "123456"}                 │
+  │  {username: "zhangsan"}          │
   │ ───────────────────────────────→ │
   │                                  │ 1. 从 TCP 连接取客户端 IP
   │                                  │    client_ip = request.client.host
@@ -261,13 +257,13 @@ POST   /api/config/apply         body: {sheet_name} → 应用某 sheet 的保�
   │                                  │    arp -a <client_ip>
   │                                  │    → "00-1a-2b-3c-4d-5e"
   │                                  │
-  │                                  │ 3. 三重校验:
+  │                                  │ 3. 双重校验:
   │                                  │    ✓ user_pins.json 中有 "zhangsan"
-  │                                  │    ✓ bcrypt(pin) 匹配 pin_hash
   │                                  │    ✓ MAC 在 mac_addresses 列表中
   │                                  │
   │  200 {token, expires_at,         │
-  │        role: "operator"}         │
+  │        role: "operator",         │
+  │        display_name: "张三"}     │
   │ ←─────────────────────────────── │
   │                                  │
   │  后续请求 Header:                 │
@@ -300,15 +296,14 @@ def get_mac_from_ip(ip: str) -> str | None:
     return None
 ```
 
-**ARP 缓存预热**：首次请求时 ARP 表中可能没有该 IP 的记录。登录失败时返回特定错误码，前端触发重试（最多 3 次，间隔 2 秒）。或者后端先 ping 一下客户端 IP 触发 ARP 学习。
-
 **容错说明**：
-- ARP 表只能解析**同一子网**内的 IP（局域网天然满足）
-- 客户端 IP 是内网地址（如 192.168.x.x），不会被 NAT 混淆
-- 如果 DHCP 分配导致 IP 变化，MAC 不变，仍然能匹配
+- 用户只需输入用户名，无需任何密码——拿着注册过的笔记本就是凭证
 - 用户换了笔记本需要找管理员更新 `mac_addresses` 列表
+- ARP 表只能解析**同一子网**内的 IP（局域网天然满足）
+- DHCP 分配导致 IP 变化不影响，MAC 不变
+- ARP 缓存未命中时返回 425，前端自动重试
 
-- JWT payload: `{sub: "zhangsan", role: "operator", iat, exp}`
+- JWT payload: `{sub: "zhangsan", role: "operator", display_name: "张三", iat, exp}`
 - 每个用户的示波器连接、Excel 实例、测量进度完全隔离
 - token 过期默认 8 小时，可通过环境变量配置
 
@@ -334,7 +329,7 @@ class LdapAuth:
 ```
 
 - 登录接口签名不变：`POST /api/auth/login {username, pin/password}`
-- 前端登录表单始终是 **用户名 + 密码/PIN** 两个字段（阶段 1 也一样用双字段，PIN 当密码用）
+- 前端登录表单始终是 **单个用户名输入框**（阶段 1 无需密码；阶段 3 再加密码字段）
 - JWT payload 随之扩展：
 ```json
 // 阶段 1
