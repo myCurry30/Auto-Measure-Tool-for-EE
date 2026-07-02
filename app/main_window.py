@@ -2,7 +2,7 @@
 import os, json
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QSizePolicy,
                                 QScrollArea, QStatusBar, QPushButton, QLabel,
-                                QMessageBox)
+                                QMessageBox, QApplication)
 from PySide6.QtCore import Qt, Slot, QTimer
 from PySide6.QtGui import QCloseEvent, QAction
 
@@ -11,7 +11,14 @@ from .theme import apply_theme
 from widgets import ConfigPanel
 
 from core import EasyExcel, instrument_manager, test_manager, measurement, capture
+from core.logger import log
 from dialogs.connect_dialog import ConnectDialog
+from dialogs.help_dialog import HelpDialog
+
+# Wire capture._pulse to the Qt event loop so the GUI stays responsive
+# during long VISA / Excel operations.
+import core.capture as capture_mod
+capture_mod._pulse = lambda: QApplication.processEvents()
 
 
 class MainWindow(QMainWindow):
@@ -51,7 +58,7 @@ class MainWindow(QMainWindow):
         if self._last_ip:
             self.conn_info_label.setText(f"IP: {self._last_ip}:{self._last_port}")
         elif self._last_connect_method != 'ip':
-            self.conn_info_label.setText("GPIB/USB")
+            self.conn_info_label.setText("GPIB/IP")
 
     def setup_ui(self):
         self.setWindowTitle("硬件工程师自动化测试工具 V2.0 - Nettrix - liujch2")
@@ -179,6 +186,14 @@ class MainWindow(QMainWindow):
         self._light_action = light_action
         self._dark_action = dark_action
 
+        # -- Help menu --
+        help_menu = menu_bar.addMenu("Help")
+        help_menu.setToolTipsVisible(True)
+        manual_action = QAction("User Manual", self)
+        manual_action.setToolTip("Open the user operation manual with chapter navigation")
+        manual_action.triggered.connect(self._show_help)
+        help_menu.addAction(manual_action)
+
         # Central widget
         central = QWidget()
         self.setCentralWidget(central)
@@ -220,14 +235,14 @@ class MainWindow(QMainWindow):
         # Apply initial theme
         apply_theme(self, self.current_theme)
 
-        print("[MainWindow] UI setup complete")
+        log.debug('MainWindow', 'UI setup complete')
 
     def closeEvent(self, event: QCloseEvent):
         """Handle application close — save connection info, keep Excel open."""
         if hasattr(self, '_connection_monitor_timer'):
             self._connection_monitor_timer.stop()
         self._save_settings()
-        print("[MainWindow] Application closed")
+        log.info('MainWindow', 'Application closed')
         super().closeEvent(event)
 
     def _load_settings(self):
@@ -252,7 +267,7 @@ class MainWindow(QMainWindow):
             with open(self._settings_file, 'w') as f:
                 json.dump(cfg, f, indent=2)
         except Exception as e:
-            print(f"[MainWindow] Failed to save settings: {e}")
+            log.warning('MainWindow', f'Failed to save settings: {e}')
 
     def connect_signals(self):
         """Connect all signals between components and business logic."""
@@ -280,7 +295,7 @@ class MainWindow(QMainWindow):
         self.state.current_item_changed.connect(self._update_item_badge)
         self.state.sheet_name_changed.connect(self._on_sheet_name_changed)
 
-        print("[MainWindow] All signals connected")
+        log.debug('MainWindow', 'All signals connected')
 
     # =========================================================================
     # Connection management
@@ -340,7 +355,7 @@ class MainWindow(QMainWindow):
                             "DPO7000" if model_flags['dpo7000'] else \
                             "DPO5104B" if model_flags['dpo5104b'] else "Unknown"
                 self.state.set_status(f"Connected: {model_str} ({params['method']})")
-                print(f"[MainWindow] Connected: {model_str} via {params['method']}")
+                log.success('MainWindow', f'Connected: {model_str} via {params["method"]}')
             else:
                 self.state.set_connection(False)
                 self.state.set_status(message)
@@ -350,7 +365,7 @@ class MainWindow(QMainWindow):
             self.state.set_connection(False)
             self.state.set_status(f"Connection failed: {str(e)}")
             QMessageBox.critical(self, "Connection Error", f"Failed to connect:\n{str(e)}")
-            print(f"[MainWindow] Error in _do_connect: {e}")
+            log.error('MainWindow', f'Error in _do_connect: {e}')
 
     @Slot()
     def _on_reconnect(self):
@@ -386,7 +401,7 @@ class MainWindow(QMainWindow):
 
                 self.state.set_connection(True)
                 self.state.set_status(f"Reconnected: {model_str} ({self._last_connect_method})")
-                print(f"[MainWindow] Reconnected: {model_str} via {self._last_connect_method}")
+                log.success('MainWindow', f'Reconnected: {model_str} via {self._last_connect_method}')
 
                 # Restart connection monitor
                 self._connection_monitor_timer.start(5000)
@@ -399,7 +414,7 @@ class MainWindow(QMainWindow):
             self.state.set_connection(False)
             self.state.set_status(f"Reconnect failed: {str(e)}")
             QMessageBox.critical(self, "Reconnect Error", f"Failed to reconnect:\n{str(e)}")
-            print(f"[MainWindow] Error in _on_reconnect: {e}")
+            log.error('MainWindow', f'Error in _on_reconnect: {e}')
 
         finally:
             self.reconnect_tb.setToolTip("Reconnect")
@@ -416,7 +431,7 @@ class MainWindow(QMainWindow):
         if not alive:
             self._fail_count = getattr(self, '_fail_count', 0) + 1
             if self._fail_count >= 2:
-                print("[MainWindow] Connection lost detected (2 consecutive failures)!")
+                log.error('MainWindow', 'Connection lost detected (2 consecutive failures)!')
                 self.state.set_connection(False)
                 self._connection_monitor_timer.stop()
                 self.state.set_status("⚠️ Connection lost! Click Reconnect to restore.")
@@ -426,7 +441,7 @@ class MainWindow(QMainWindow):
                     "Click '🔄 Reconnect' to restore the connection."
                 )
             else:
-                print(f"[MainWindow] Connection check timeout ({self._fail_count}/2)")
+                log.warning('MainWindow', f'Connection check timeout ({self._fail_count}/2)')
         else:
             self._fail_count = 0
 
@@ -476,14 +491,14 @@ class MainWindow(QMainWindow):
             self.state.signal4 = self.state.signal4_name
 
             self.state.set_status(f"Loaded test item {self.state.test_type}")
-            print(f"[MainWindow] Test data loaded: item={self.state.test_type}, "
-                  f"signal1={self.state.signal1_name}, signal2={self.state.signal2_name}, "
-                  f"signal3={self.state.signal3_name}")
-            print("[MainWindow] Using existing Excel instance - no new window opened")
+            log.info('MainWindow', f"Test data loaded: item={self.state.test_type}, "
+                     f"signal1={self.state.signal1_name}, signal2={self.state.signal2_name}, "
+                     f"signal3={self.state.signal3_name}")
+            log.debug('MainWindow', 'Using existing Excel instance - no new window opened')
 
         except Exception as e:
             self.state.set_status(f"Error loading test: {str(e)}")
-            print(f"[MainWindow] Error in _load_test_data: {e}")
+            log.error('MainWindow', f'Error in _load_test_data: {e}')
 
     # =========================================================================
     # Navigation
@@ -555,6 +570,8 @@ class MainWindow(QMainWindow):
         lay = QVBoxLayout(dlg)
         lay.addWidget(QLabel("Set Excel column for each signal:"))
         form = QFormLayout()
+        form.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        form.setSpacing(6)
         spins = []
         cp = self.config_panel
         for i in range(4):
@@ -562,16 +579,31 @@ class MainWindow(QMainWindow):
             sp.setRange(1, 99)
             sp.setValue(cp.signal_cols[i])
             spins.append(sp)
-            form.addRow(f"Signal {i+1}:", sp)
+            form.addRow(f"Signal {i+1}:", self._col_spin_with_letter(sp))
         lay.addLayout(form)
         btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        btns.accepted.connect(dlg.accept)
-        btns.rejected.connect(dlg.reject)
         lay.addWidget(btns)
+
+        def _validate_and_accept():
+            vals = [s.value() for s in spins]
+            seen = set()
+            for i, v in enumerate(vals):
+                if v in seen:
+                    QMessageBox.warning(dlg, "Duplicate Column",
+                        f"Signal {i+1}: column {self._col_to_letter(v)} "
+                        f"conflicts with another signal.\n\n"
+                        f"Each signal must have a unique column.")
+                    return
+                seen.add(v)
+            dlg.accept()
+
+        btns.accepted.connect(_validate_and_accept)
+        btns.rejected.connect(dlg.reject)
+
         if dlg.exec() == QDialog.Accepted:
             cp.signal_cols = [s.value() for s in spins]
             cp._read_initial_signals()
-            print(f"[MainWindow] Signal cols set to {cp.signal_cols}")
+            log.info('MainWindow', f'Signal cols set to {cp.signal_cols}')
 
     @staticmethod
     def _col_to_letter(n):
@@ -596,9 +628,10 @@ class MainWindow(QMainWindow):
         return w
 
     def _set_data_cols(self):
-        """Open dialog to set measurement data columns (Sequence DELAY + Monotony TOP/BASE/MAX/MIN)."""
+        """Open dialog to set measurement data columns with enable/disable."""
         from PySide6.QtWidgets import (QDialog, QFormLayout, QSpinBox,
-                                        QDialogButtonBox, QVBoxLayout, QLabel, QGroupBox)
+                                        QDialogButtonBox, QVBoxLayout, QLabel, QGroupBox,
+                                        QCheckBox, QHBoxLayout)
         dlg = QDialog(self)
         dlg.setWindowTitle("Data Columns")
         lay = QVBoxLayout(dlg)
@@ -607,52 +640,93 @@ class MainWindow(QMainWindow):
         def _make_spin(val):
             sp = QSpinBox(); sp.setRange(1, 99); sp.setValue(val); return sp
 
-        def _make_form():
-            f = QFormLayout()
-            f.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            f.setSpacing(6)
-            return f
+        def _row_with_enable(label, val, en, parent_form):
+            """Add a row: [✓] spin → letter to *parent_form*.  Returns (cb, spin)."""
+            cb = QCheckBox()
+            cb.setChecked(en)
+            sp = _make_spin(val)
+            row = QHBoxLayout()
+            row.setContentsMargins(0, 0, 0, 0)
+            row.setSpacing(4)
+            row.addWidget(cb)
+            row.addWidget(sp)
+            row.addStretch()
+            letter = QLabel('→ ' + self._col_to_letter(sp.value()))
+            letter.setFixedWidth(45)
+            sp.valueChanged.connect(lambda v, l=letter: l.setText('→ ' + self._col_to_letter(v)))
+            row.addWidget(letter)
+            parent_form.addRow(label + ':', row)
+            return cb, sp
 
         # ── Sequence ──
         seq_grp = QGroupBox("Sequence")
-        seq_form = _make_form()
-        seq_spin = _make_spin(cp.data_col)
-        seq_form.addRow("DELAY:", self._col_spin_with_letter(seq_spin))
+        seq_form = QFormLayout()
+        seq_form.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        seq_form.setSpacing(6)
+        seq_cb, seq_spin = _row_with_enable("DELAY", cp.data_col, cp.seq_data_en, seq_form)
         seq_grp.setLayout(seq_form)
         lay.addWidget(seq_grp)
 
         # ── Monotony P ──
         p_grp = QGroupBox("Monotony P")
-        p_form = _make_form()
-        p_spins = []
-        for label, col in zip(['TOP', 'BASE', 'MAX', 'MIN'], cp.mono_p_cols):
-            sp = _make_spin(col); p_spins.append(sp)
-            p_form.addRow(label + ':', self._col_spin_with_letter(sp))
+        p_form = QFormLayout()
+        p_form.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        p_form.setSpacing(6)
+        p_cbs, p_spins = [], []
+        for label, col, en in zip(['TOP', 'BASE', 'MAX', 'MIN'],
+                                   cp.mono_p_cols, cp.mono_p_data_en):
+            cb, sp = _row_with_enable(label, col, en, p_form)
+            p_cbs.append(cb); p_spins.append(sp)
         p_grp.setLayout(p_form)
         lay.addWidget(p_grp)
 
         # ── Monotony N ──
         n_grp = QGroupBox("Monotony N")
-        n_form = _make_form()
-        n_spins = []
-        for label, col in zip(['TOP', 'BASE', 'MAX', 'MIN'], cp.mono_n_cols):
-            sp = _make_spin(col); n_spins.append(sp)
-            n_form.addRow(label + ':', self._col_spin_with_letter(sp))
+        n_form = QFormLayout()
+        n_form.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        n_form.setSpacing(6)
+        n_cbs, n_spins = [], []
+        for label, col, en in zip(['TOP', 'BASE', 'MAX', 'MIN'],
+                                   cp.mono_n_cols, cp.mono_n_data_en):
+            cb, sp = _row_with_enable(label, col, en, n_form)
+            n_cbs.append(cb); n_spins.append(sp)
         n_grp.setLayout(n_form)
         lay.addWidget(n_grp)
 
         btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        btns.accepted.connect(dlg.accept)
-        btns.rejected.connect(dlg.reject)
         lay.addWidget(btns)
 
+        def _validate_and_accept():
+            # Only check enabled items for duplicates
+            p_en_vals = [s.value() for s, cb in zip(p_spins, p_cbs) if cb.isChecked()]
+            n_en_vals = [s.value() for s, cb in zip(n_spins, n_cbs) if cb.isChecked()]
+            all_vals = p_en_vals + n_en_vals
+            seen = set()
+            for v in all_vals:
+                if v in seen:
+                    QMessageBox.warning(dlg, "Duplicate Column",
+                        f"Column {self._col_to_letter(v)} appears more than once.\n\n"
+                        f"All enabled Monotony data columns must be unique.")
+                    return
+                seen.add(v)
+            dlg.accept()
+
+        btns.accepted.connect(_validate_and_accept)
+        btns.rejected.connect(dlg.reject)
+
         if dlg.exec() == QDialog.Accepted:
+            cp.seq_data_en = seq_cb.isChecked()
             cp.data_col = seq_spin.value()
+            cp.mono_p_data_en = [cb.isChecked() for cb in p_cbs]
             cp.mono_p_cols = [s.value() for s in p_spins]
+            cp.mono_n_data_en = [cb.isChecked() for cb in n_cbs]
             cp.mono_n_cols = [s.value() for s in n_spins]
-            print(f"[MainWindow] Data cols: seq={self._col_to_letter(cp.data_col)}, "
-                  f"monoP={[self._col_to_letter(c) for c in cp.mono_p_cols]}, "
-                  f"monoN={[self._col_to_letter(c) for c in cp.mono_n_cols]}")
+            log.info('MainWindow', f"Data cols: seq={self._col_to_letter(cp.data_col)}"
+                     f"({'ON' if cp.seq_data_en else 'OFF'}), "
+                     f"monoP={[self._col_to_letter(c) for c in cp.mono_p_cols]}"
+                     f"({['ON' if e else 'OFF' for e in cp.mono_p_data_en]}), "
+                     f"monoN={[self._col_to_letter(c) for c in cp.mono_n_cols]}"
+                     f"({['ON' if e else 'OFF' for e in cp.mono_n_data_en]})")
 
     def _set_pic_cols(self):
         """Open dialog to set picture insertion columns (Sequence + Monotony P/N)."""
@@ -705,9 +779,9 @@ class MainWindow(QMainWindow):
             cp.seq_pic_col = seq_spin.value()
             cp.mono_p_pic_col = p_spin.value()
             cp.mono_n_pic_col = n_spin.value()
-            print(f"[MainWindow] Picture cols: seq={self._col_to_letter(cp.seq_pic_col)}, "
-                  f"monoP={self._col_to_letter(cp.mono_p_pic_col)}, "
-                  f"monoN={self._col_to_letter(cp.mono_n_pic_col)}")
+            log.info('MainWindow', f"Picture cols: seq={self._col_to_letter(cp.seq_pic_col)}, "
+                     f"monoP={self._col_to_letter(cp.mono_p_pic_col)}, "
+                     f"monoN={self._col_to_letter(cp.mono_n_pic_col)}")
 
     def _set_init_row(self):
         """Open dialog to set initial row number."""
@@ -724,7 +798,9 @@ class MainWindow(QMainWindow):
                 rspin.setMinimum(val)
                 if rspin.value() < val:
                     rspin.setValue(val)
-            print(f"[MainWindow] Init row set to {val}")
+            # Re-read signals at the new row + sync CH labels
+            self.config_panel._read_initial_signals()
+            log.info('MainWindow', f'Init row set to {val}')
 
     def _reload_excel(self):
         """Reopen Excel file and restore current sheet selection."""
@@ -743,7 +819,7 @@ class MainWindow(QMainWindow):
             self.state.sheet_name = saved_sheet
             self.config_panel._read_initial_signals()
         self.state.set_status("Excel reloaded")
-        print("[MainWindow] Excel reloaded")
+        log.info('MainWindow', 'Excel reloaded')
 
     def _show_save_error(self, operation, error):
         """Show popup dialog when a save operation fails."""
@@ -764,7 +840,7 @@ class MainWindow(QMainWindow):
         try:
             self.state.xls.save()
             self.state.set_status("Excel saved")
-            print("[MainWindow] Excel saved")
+            log.success('MainWindow', 'Excel saved')
         except Exception as e:
             self._show_save_error("Save Excel", e)
 
@@ -782,6 +858,7 @@ class MainWindow(QMainWindow):
             return
         try:
             do_scope = self.config_panel.save_to_scope_cb.isChecked()
+            do_local = self.config_panel.save_to_local_cb.isChecked()
             capture.Capture_Pic(
                 self.state.osc, self.state.xls,
                 self.state.sheet_name or "Sheet1",
@@ -792,19 +869,28 @@ class MainWindow(QMainWindow):
                 self.state.project_name,
                 save_pic=True, save_data=False,
                 save_to_excel=do_excel, save_to_scope=do_scope,
+                save_to_local=do_local,
                 data_col=self.config_panel.data_col,
                 mono_p_cols=self.config_panel.mono_p_cols,
                 mono_n_cols=self.config_panel.mono_n_cols,
                 pic_cols=(self.config_panel.seq_pic_col,
                           self.config_panel.mono_p_pic_col,
                           self.config_panel.mono_n_pic_col),
+                ch_enables=[self.config_panel.ch_enables[i].isChecked() for i in range(4)],
+                seq_data_en=self.config_panel.seq_data_en,
+                mono_p_data_en=list(self.config_panel.mono_p_data_en),
+                mono_n_data_en=list(self.config_panel.mono_n_data_en),
             )
-            parts = ["Picture saved to local"]
+            parts = []
+            if do_local:
+                parts.append("Local")
             if do_excel:
                 parts.append("Excel")
             if do_scope:
                 parts.append("Scope")
-            self.state.set_status(" + ".join(parts))
+            if not parts:
+                parts.append("Scope only")
+            self.state.set_status("Picture saved: " + " + ".join(parts))
             self.config_panel.remember_current_sheet_config()
         except Exception as e:
             self._show_save_error("Save Picture", e)
@@ -833,6 +919,10 @@ class MainWindow(QMainWindow):
                 pic_cols=(self.config_panel.seq_pic_col,
                           self.config_panel.mono_p_pic_col,
                           self.config_panel.mono_n_pic_col),
+                ch_enables=[self.config_panel.ch_enables[i].isChecked() for i in range(4)],
+                seq_data_en=self.config_panel.seq_data_en,
+                mono_p_data_en=list(self.config_panel.mono_p_data_en),
+                mono_n_data_en=list(self.config_panel.mono_n_data_en),
             )
             self.state.set_status("Data saved to Excel")
             self.config_panel.remember_current_sheet_config()
@@ -845,6 +935,8 @@ class MainWindow(QMainWindow):
             self._warn("Save Pic+Data", "Please connect to an oscilloscope first.")
             return
         try:
+            do_excel = self.config_panel.save_to_excel_cb.isChecked()
+            do_local = self.config_panel.save_to_local_cb.isChecked()
             do_scope = self.config_panel.save_to_scope_cb.isChecked()
             capture.Capture_Pic(
                 self.state.osc, self.state.xls,
@@ -855,13 +947,18 @@ class MainWindow(QMainWindow):
                 self.state.row, self.state.mso5, self.state.pic_path,
                 self.state.project_name,
                 save_pic=True, save_data=True,
-                save_to_excel=True, save_to_scope=do_scope,
+                save_to_excel=do_excel, save_to_scope=do_scope,
+                save_to_local=do_local,
                 data_col=self.config_panel.data_col,
                 mono_p_cols=self.config_panel.mono_p_cols,
                 mono_n_cols=self.config_panel.mono_n_cols,
                 pic_cols=(self.config_panel.seq_pic_col,
                           self.config_panel.mono_p_pic_col,
                           self.config_panel.mono_n_pic_col),
+                ch_enables=[self.config_panel.ch_enables[i].isChecked() for i in range(4)],
+                seq_data_en=self.config_panel.seq_data_en,
+                mono_p_data_en=list(self.config_panel.mono_p_data_en),
+                mono_n_data_en=list(self.config_panel.mono_n_data_en),
             )
             self.state.set_status("Picture + Data saved")
             self.config_panel.remember_current_sheet_config()
@@ -944,7 +1041,7 @@ class MainWindow(QMainWindow):
                 osc.write(f'HORIZONTAL:MODE:SCALE {cp.hor_scale:g}')
                 osc.horpos(cp.hor_pos)
                 self.state.set_status(f"Horizontal: {cp.hor_mode} {cp.hor_scale:g}s/div {cp.hor_pos}%")
-            print(f"[MainWindow] MSO HOR: mode={cp.hor_mode}, scale={cp.hor_scale:g}, pos={cp.hor_pos}")
+            log.info('MainWindow', f"MSO HOR: mode={cp.hor_mode}, scale={cp.hor_scale:g}, pos={cp.hor_pos}")
 
         btns.button(QDialogButtonBox.Apply).clicked.connect(_apply)
         if dlg.exec() == QDialog.Accepted:
@@ -997,7 +1094,7 @@ class MainWindow(QMainWindow):
                     if ch_enables[i]:
                         osc.chanset(ch_name, cp.ch_pos[i], 0, '1.0000E+09', cp.ch_scale[i])
                 self.state.set_status("Channel setup applied")
-            print(f"[MainWindow] MSO CH: pos={cp.ch_pos}, scale={cp.ch_scale}")
+            log.info('MainWindow', f"MSO CH: pos={cp.ch_pos}, scale={cp.ch_scale}")
 
         btns.button(QDialogButtonBox.Apply).clicked.connect(_apply)
         if dlg.exec() == QDialog.Accepted:
@@ -1018,10 +1115,10 @@ class MainWindow(QMainWindow):
         y_spins = []
         for i, ch_name in enumerate(["CH1", "CH2", "CH3", "CH4"]):
             x_spin = QSpinBox()
-            x_spin.setRange(0, 100); x_spin.setValue(cp.ch_label_x[i])
+            x_spin.setRange(0, 999); x_spin.setValue(cp.ch_label_x[i])
             x_spins.append(x_spin)
             y_spin = QSpinBox()
-            y_spin.setRange(0, 100); y_spin.setValue(cp.ch_label_y[i])
+            y_spin.setRange(0, 999); y_spin.setValue(cp.ch_label_y[i])
             y_spins.append(y_spin)
 
             row = QHBoxLayout()
@@ -1041,7 +1138,7 @@ class MainWindow(QMainWindow):
             for i in range(4):
                 cp.ch_label_x[i] = x_spins[i].value()
                 cp.ch_label_y[i] = y_spins[i].value()
-            print(f"[MainWindow] Label pos: x={cp.ch_label_x}, y={cp.ch_label_y}")
+            log.info('MainWindow', f"Label pos: x={cp.ch_label_x}, y={cp.ch_label_y}")
             # Re-apply labels to scope with new positions
             self._on_set_label()
 
@@ -1090,15 +1187,32 @@ class MainWindow(QMainWindow):
 
             osc.state('run')
             self.state.set_status("MSO configured (one-click)")
-            print(f"[MainWindow] One-click MSO: type={self.state.test_type}, "
-                  f"hor={cp.hor_mode}/{cp.hor_scale:g}s/{cp.hor_pos}%, "
-                  f"ch_pos={cp.ch_pos}, ch_scale={cp.ch_scale}")
+            log.info('MainWindow', f"One-click MSO: type={self.state.test_type}, "
+                     f"hor={cp.hor_mode}/{cp.hor_scale:g}s/{cp.hor_pos}%, "
+                     f"ch_pos={cp.ch_pos}, ch_scale={cp.ch_scale}")
 
             # Auto-set labels after MSO configuration
             self._on_set_label()
 
         except Exception as e:
             self._show_save_error("Set MSO", e)
+
+    # =========================================================================
+    # Help
+    # =========================================================================
+
+    def _show_help(self):
+        """Open the user manual dialog (non-modal — won't block the main GUI)."""
+        # Reuse existing dialog if already open; just bring it to front
+        if hasattr(self, '_help_dlg') and self._help_dlg is not None:
+            if self._help_dlg.isVisible():
+                self._help_dlg.raise_()
+                self._help_dlg.activateWindow()
+                return
+        self._help_dlg = HelpDialog()  # no parent — independent window, won't block main GUI
+        self._help_dlg.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self._help_dlg.destroyed.connect(lambda: setattr(self, '_help_dlg', None))
+        self._help_dlg.show()
 
     # =========================================================================
     # Theme
@@ -1145,28 +1259,28 @@ class MainWindow(QMainWindow):
 
     def _update_item_badge(self, current_item):
         """Update current item badge."""
-        print(f"[MainWindow] Current item: {current_item}")
+        log.debug('MainWindow', f'Current item: {current_item}')
 
     @Slot(str)
     @Slot(str)
     def _on_sheet_name_changed(self, sheet_name):
         """Handle sheet name change from combo box - activate Excel and load test data."""
-        print(f"[MainWindow] _on_sheet_name_changed called: {sheet_name}")
+        log.info('MainWindow', f'Sheet name changed: {sheet_name}')
 
         if not sheet_name:
-            print("[MainWindow] Empty sheet name, skipping")
+            log.debug('MainWindow', 'Empty sheet name, skipping')
             return
 
         if not self.state.xls:
-            print("[MainWindow] No Excel instance, skipping")
+            log.debug('MainWindow', 'No Excel instance, skipping')
             return
 
         # Activate the sheet in Excel
         try:
             self.state.xls.activate_sheet(sheet_name)
-            print(f"[MainWindow] Excel sheet activated: {sheet_name}")
+            log.info('MainWindow', f'Excel sheet activated: {sheet_name}')
         except Exception as e:
-            print(f"[MainWindow] Error activating Excel sheet: {e}")
+            log.error('MainWindow', f'Error activating Excel sheet: {e}')
             self.state.set_status(f"Error: {str(e)}")
             return
 
@@ -1197,6 +1311,23 @@ class MainWindow(QMainWindow):
                 cp.ch_edits[i].setText(sig_val)
                 setattr(self.state, f'ch{i + 1}_label', sig_val)
 
+        # Auto-switch trigger edge on P/N toggle for Monotony
+        if (self.state.test_type == 'monotony'
+                and self.state.flag_mso_connect and self.state.osc):
+            direction = self.state.flag_monotony_direction
+            edge = 'RISE' if direction == 1 else 'FALL'
+            # Use first enabled CH as trigger source
+            source = 'CH1'
+            for i in range(4):
+                if cp.ch_enables[i].isChecked():
+                    source = f'CH{i + 1}'
+                    break
+            try:
+                self.state.osc.write(f'TRIGGER:A:EDGE:SLOPE {edge}')
+                log.info('MainWindow', f'Trigger edge → {edge} (src={source})')
+            except Exception as e:
+                log.warning('MainWindow', f'Failed to set trigger edge: {e}')
+
     def _handle_connection_error(self, error, operation):
         """Handle errors that may indicate a lost connection.
 
@@ -1209,7 +1340,7 @@ class MainWindow(QMainWindow):
         ])
 
         if is_connection_error:
-            print(f"[MainWindow] Connection error during {operation}: {error}")
+            log.error('MainWindow', f'Connection error during {operation}: {error}')
             self.state.set_connection(False)
             self._connection_monitor_timer.stop()
             self.state.set_status(f"⚠️ Connection lost during {operation}. Click Reconnect.")
@@ -1221,4 +1352,4 @@ class MainWindow(QMainWindow):
             )
         else:
             self.state.set_status(f"Error in {operation}: {error_str}")
-            print(f"[MainWindow] Error in {operation}: {error}")
+            log.error('MainWindow', f'Error in {operation}: {error}')

@@ -3,6 +3,7 @@
 Contains measure_sequence, measure_monotony, common_set, and channel_Lable_set.
 All functions accept oscilloscope instance and parameters, no global state.
 """
+from .logger import log
 
 
 def common_set(osc, dpo7000, dpo5104b):
@@ -38,8 +39,8 @@ def channel_Lable_set(osc, ch1_label, ch2_label, ch3_label, ch4_label="",
         ch2_label: CH2 label text or None to skip
         ch3_label: CH3 label text or None to skip
         ch4_label: CH4 label text or None to skip
-        label_x: Optional list [x1,x2,x3,x4] of X positions (0-100), default 10
-        label_y: Optional list [y1,y2,y3,y4] of Y positions (0-100), default 40
+        label_x: Optional list [x1,x2,x3,x4] of X positions (0-999), default 10
+        label_y: Optional list [y1,y2,y3,y4] of Y positions (0-999), default 40
     """
     if label_x is None:
         label_x = [10, 10, 10, 10]
