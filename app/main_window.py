@@ -1118,7 +1118,7 @@ class MainWindow(QMainWindow):
             x_spin.setRange(0, 999); x_spin.setValue(cp.ch_label_x[i])
             x_spins.append(x_spin)
             y_spin = QSpinBox()
-            y_spin.setRange(0, 999); y_spin.setValue(cp.ch_label_y[i])
+            y_spin.setRange(0, 9999); y_spin.setValue(cp.ch_label_y[i])
             y_spins.append(y_spin)
 
             row = QHBoxLayout()
