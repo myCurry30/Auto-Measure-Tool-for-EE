@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, Form, Select, InputNumber, Input, Button, Tabs, Space, message, Switch, Row, Col } from "antd";
 import { SaveOutlined, UploadOutlined, DownloadOutlined } from "@ant-design/icons";
 import { apiFetch } from "../../services/auth";
@@ -6,12 +6,6 @@ import { apiFetch } from "../../services/auth";
 export default function ConfigPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [excelInfo, setExcelInfo] = useState<any>({});
-
-  useEffect(() => {
-    apiFetch("/api/excel/info").then(r => r.json()).then(setExcelInfo).catch(() => {});
-  }, []);
-
   const handleSave = async (values: any) => {
     setLoading(true);
     try {
