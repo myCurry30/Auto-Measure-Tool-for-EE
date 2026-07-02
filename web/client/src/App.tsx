@@ -4,6 +4,7 @@ import zhCN from "antd/locale/zh_CN";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import AppLayout from "./layouts/AppLayout";
 import LoginPage from "./pages/LoginPage";
+import ConnectPage from "./pages/ConnectPage";
 
 // Placeholder pages for routes not yet implemented
 const Placeholder = ({ title }: { title: string }) => (
@@ -35,7 +36,7 @@ export default function App() {
             >
               <Route
                 path="/connect"
-                element={<Placeholder title="Connect" />}
+                element={<ConnectPage />}
               />
               <Route
                 path="/config"
