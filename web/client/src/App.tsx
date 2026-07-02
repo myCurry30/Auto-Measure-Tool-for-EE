@@ -6,14 +6,8 @@ import AppLayout from "./layouts/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import ConnectPage from "./pages/ConnectPage";
 import ConfigPage from "./pages/ConfigPage";
-
-// Placeholder pages for routes not yet implemented
-const Placeholder = ({ title }: { title: string }) => (
-  <div style={{ padding: 40, textAlign: "center" }}>
-    <h2>{title}</h2>
-    <p>Under development...</p>
-  </div>
-);
+import MeasurePage from "./pages/MeasurePage";
+import HelpPage from "./pages/HelpPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -45,11 +39,11 @@ export default function App() {
               />
               <Route
                 path="/measure"
-                element={<Placeholder title="Measure" />}
+                element={<MeasurePage />}
               />
               <Route
                 path="/help"
-                element={<Placeholder title="Manual" />}
+                element={<HelpPage />}
               />
             </Route>
             <Route path="*" element={<Navigate to="/login" replace />} />
