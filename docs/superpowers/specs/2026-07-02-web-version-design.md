@@ -32,6 +32,7 @@
 | UI 组件库 | Ant Design 5 | 表格/表单/步骤条等开箱即用，适合工具类应用 |
 | 构建工具 | Vite | 快速 HMR，零配置起步 |
 | 后端 | FastAPI (Python 3.12) | 异步支持、WebSocket 原生、自动 OpenAPI 文档 |
+| 认证 | JWT (python-jose) + bcrypt | 当前阶段 PIN 码，预留 LDAP/AD 扩展点 |
 | 实时通信 | WebSocket | 日志推送、心跳、测量进度 |
 | Excel | win32com（复用现有 EasyExcel） | 单机 Windows 环境，COM 仍然最优 |
 | 示波器通信 | PyVISA（复用现有驱动） | 不变，直接 import 现有 core/ 模块 |
@@ -97,7 +98,8 @@
 ### 4.2 页面拆解
 
 | 页面 | 路径 | 对应桌面版 | 核心 Ant Design 组件 |
-|---|---|---|---|
+|---|---|---|---|---|
+| 登录页 | `/login` | 无（新增） | Form, Input, Button, Alert |
 | 连接页 | `/connect` | ConnectDialog + ActionBar | Form, Select, Input, Button, Badge, Alert |
 | 配置页 | `/config` | ConfigPanel + SignalSetupDialog + NavBar | Card, Form, Select, InputNumber, Button.Group, Tabs |
 | 测量页 | `/measure` | 控制面板 + 日志 + MSO 设置 | Table, Button, Timeline, Progress, Modal |
@@ -115,7 +117,15 @@
 
 ### 5.1 REST 端点
 
+除 `/api/auth/login` 外，所有端点需要在 Header 中携带 `Authorization: Bearer <token>`。
+token 过期时间默认 8 小时，可通过环境变量配置。
+
 ```
+# 认证（无需 token）
+POST   /api/auth/login           body: {pin: "xxxx"}
+  → 200 {token: "eyJ...", expires_at: "2026-07-02T22:00:00"}
+  → 401 {detail: "PIN 不正确"}
+
 # 连接管理
 POST   /api/connect              body: {method, ip?, port?, use_socket?}
 DELETE /api/connect
@@ -168,7 +178,94 @@ POST   /api/config/apply         body: {sheet_name} → 应用某 sheet 的保�
 
 ---
 
-## 6. 项目目录结构
+## 6. 认证设计（阶段 1: PIN 码 → 阶段 3: LDAP/AD）
+
+### 6.1 设计原则
+
+前后端只通过 JWT token 通信，前端完全不感知后端如何验证身份。将来从 PIN 切换到 LDAP/AD 时，前端零改动。
+
+### 6.2 阶段 1：PIN 码认证
+
+```
+前端                          后端
+  │                            │
+  │  POST /api/auth/login      │
+  │  {pin: "888888"}           │
+  │ ─────────────────────────→ │
+  │                            │ config.json.pin_hash = bcrypt(pin)
+  │                            │ 比对 → 通过
+  │  200 {token, expires_at}   │
+  │ ←───────────────────────── │
+  │                            │
+  │  后续所有请求               │
+  │  Authorization: Bearer xxx │
+  │ ─────────────────────────→ │ 验证 JWT 签名 + 过期时间
+```
+
+- PIN 的 bcrypt hash 存在 `config.json` 中（初始值写死在代码里，用户可在配置页修改）
+- JWT payload: `{sub: "local_user", role: "admin", iat, exp}`
+- 单机单用户，role 固定为 `admin`
+
+### 6.3 阶段 3 扩展：LDAP/AD
+
+后端改动范围仅为 `POST /api/auth/login` 的实现：
+
+```python
+# 阶段 1: web/server/api/auth.py
+class PinAuth:
+    def authenticate(self, pin: str) -> str | None:
+        # bcrypt 比对 config.json 中的 pin_hash
+
+# 阶段 3: web/server/api/auth.py  （替换实现）
+class LdapAuth:
+    def __init__(self, server, domain, group_map):
+        ...
+    def authenticate(self, username: str, password: str) -> str | None:
+        # ldap3 验证 AD 账号
+        # 根据 AD group 映射 role: Domain Admins→admin, Engineers→operator
+        # 返回 None 表示失败
+```
+
+JWT payload 随之扩展：
+```json
+// 阶段 1
+{"sub": "local_user", "role": "admin"}
+// 阶段 3
+{"sub": "zhangsan@nettrix.com", "role": "operator", "display_name": "张三"}
+```
+
+前端路由守卫只需判断 `role`，三个阶段逻辑不变：
+```typescript
+// 路由守卫 — 始终不变
+{role === 'admin' && <ConfigPage />}
+{role !== 'viewer' && <MeasureGoButton />}
+```
+
+### 6.4 目录结构补充
+
+```
+web/server/api/
+├─ auth.py        ← FastAPI 路由 + Depends(get_current_user)
+├─ auth/
+│   ├─ pin.py     ← 阶段 1: PinAuth
+│   └─ ldap.py    ← 阶段 3: LdapAuth（预留接口，暂时 pass）
+└─ deps.py        ← get_current_user 依赖注入
+```
+
+### 6.5 前端改动
+
+```
+web/client/src/
+├─ contexts/AuthContext.tsx   ← 登录态、token 管理、路由守卫
+├─ pages/LoginPage/           ← PIN 输入表单
+└─ services/auth.ts           ← login() / logout() / getToken()
+```
+
+未登录时所有路由自动重定向到 `/login`。token 存 localStorage，页面刷新不丢失。
+
+---
+
+## 7. 项目目录结构
 
 ```
 EE_Power_on_AutoTool_VER2.0/
@@ -184,20 +281,27 @@ EE_Power_on_AutoTool_VER2.0/
 │   │   │   ├─ measure.py
 │   │   │   ├─ excel.py
 │   │   │   ├─ config.py
-│   │   │   └─ ws.py
+│   │   │   ├─ ws.py
+│   │   │   └─ auth.py      ← get_current_user 依赖 + 路由
+│   │   ├─ auth/            ← 可插拔认证后端
+│   │   │   ├─ pin.py       ← 阶段 1: PinAuth
+│   │   │   └─ ldap.py      ← 阶段 3: LdapAuth (预留)
 │   │   └─ state.py   ← 后端 AppState（无 Qt 依赖）
 │   ├─ client/        ← React + Vite 前端
 │   │   ├─ src/
 │   │   │   ├─ layouts/
 │   │   │   ├─ pages/
+│   │   │   │   ├─ LoginPage/     ← PIN 登录
 │   │   │   │   ├─ ConnectPage/
 │   │   │   │   ├─ ConfigPage/
 │   │   │   │   ├─ MeasurePage/
 │   │   │   │   └─ HelpPage/
 │   │   │   ├─ components/  ← 共享组件
-│   │   │   ├─ contexts/    ← React Context
+│   │   │   ├─ contexts/
+│   │   │   │   └─ AuthContext.tsx   ← 登录态 + 路由守卫
 │   │   │   ├─ hooks/       ← 自定义 hooks
-│   │   │   └─ services/    ← API 调用封装
+│   │   │   └─ services/
+│   │   │       └─ auth.ts   ← login() / logout() / getToken()
 │   │   └─ package.json
 │   └─ README.md
 ├─ main.py            ← 现有桌面版入口，不动
@@ -207,7 +311,7 @@ EE_Power_on_AutoTool_VER2.0/
 
 ---
 
-## 7. 关键技术决策
+## 8. 关键技术决策
 
 ### 7.1 为何复用 core/ 而不是重写
 
@@ -231,7 +335,7 @@ FastAPI 默认在事件循环中运行，但 VISA 和 COM 操作都是阻塞调�
 
 ---
 
-## 8. 风险与对策
+## 9. 风险与对策
 
 | 风险 | 对策 |
 |---|---|
@@ -242,9 +346,9 @@ FastAPI 默认在事件循环中运行，但 VISA 和 COM 操作都是阻塞调�
 
 ---
 
-## 9. 预设：不做的事情
+## 10. 预设：不做的事情
 
-- ❌ 用户登录/权限系统
+- ❌ ~~用户登录/权限系统~~（已纳入，见第 6 节）
 - ❌ 数据库（SQLite/PostgreSQL）
 - ❌ Docker 容器化
 - ❌ 远程访问（SSH 隧道是目前最简方案，不需要内网穿透）
