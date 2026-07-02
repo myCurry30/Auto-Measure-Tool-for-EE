@@ -1,0 +1,19 @@
+# EE Power On AutoTool V2.0 — Runtime Dependencies
+# Install: pip install -r requirements.txt
+
+# GUI Framework
+PySide6>=6.5.0
+
+# Instrument Communication (VISA)
+PyVISA>=1.14.0
+PyVISA-py>=0.7.0
+
+# Excel Automation (COM on Windows)
+pywin32>=305
+
+# Web Backend (FastAPI)
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-jose[cryptography]>=3.3.0
+python-multipart>=0.0.9
+websockets>=12.0
