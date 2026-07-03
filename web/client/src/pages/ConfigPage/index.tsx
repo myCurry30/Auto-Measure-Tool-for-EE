@@ -6,7 +6,7 @@ import { apiFetch } from "../../services/auth";
 export default function ConfigPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [paths, setPaths] = useState({ file_path: "", pic_path: "", project_name: "" });
+  const [, setPaths] = useState({ file_path: "", pic_path: "", project_name: "" });
   const [pathsLoading, setPathsLoading] = useState(false);
 
   const [pathForm] = Form.useForm();
