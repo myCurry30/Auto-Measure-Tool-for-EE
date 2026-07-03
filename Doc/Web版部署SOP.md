@@ -230,17 +230,21 @@ INFO:     Uvicorn running on http://0.0.0.0:8200
 
 **步骤 1：找到 Python 完整路径**
 
-```powershell
-where python
+在能运行 `python` 的 CMD/PowerShell 窗口执行：
+
+```cmd
+python -c "import sys; print(sys.executable)"
 ```
 
-输出类似 `C:\Users\Administrator\AppData\Local\Programs\Python\Python312\python.exe`，记下这个路径。
+输出示例：`C:\Users\Administrator\AppData\Local\Programs\Python\Python313\python.exe`
+
+> 如果 `where python` 无输出，说明 Python 不在 PATH，用上面命令一定能找到。
 
 **步骤 2：创建启动脚本**
 
 > 必须用 Python 的完整路径，不能用 `python` 简称（SYSTEM 账户环境下找不到）
 
-**方式一：PowerShell 直接生成（把下面 `FULL_PYTHON_PATH` 替换为步骤 1 的路径）**
+**方式一：PowerShell 直接生成（把 `FULL_PYTHON_PATH` 替换为步骤 1 查询到的路径）**
 
 ```powershell
 @"
@@ -257,7 +261,7 @@ FULL_PYTHON_PATH web\start.py --prod
 ```batch
 @echo off
 cd /d C:\EE_POWER_ON_Tool_WEB\autotool-web
-C:\Users\Administrator\AppData\Local\Programs\Python\Python312\python.exe web\start.py --prod
+C:\Users\Administrator\AppData\Local\Programs\Python\Python313\python.exe web\start.py --prod
 ```
 
 **步骤 3：创建计划任务（管理员 PowerShell）**
