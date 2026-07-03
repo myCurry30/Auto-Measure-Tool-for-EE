@@ -43,7 +43,7 @@
 **方式 A: 从 Git 仓库拉取（推荐）**
 
 ```bash
-git clone <仓库地址>
+git clone https://github.com/myCurry30/Auto-Measure-Tool-for-EE.git
 cd "EE_Power_on_AutoTool_VER2.0"
 git checkout feature/web-version
 ```
