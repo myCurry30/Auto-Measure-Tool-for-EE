@@ -128,17 +128,17 @@ VITE_API_BASE=http://192.168.1.50:8000
   "admin": {
     "role": "admin",
     "display_name": "管理员",
-    "mac_addresses": ["00:11:22:33:44:55"]
+    "mac_addresses": ["00-11-22-33-44-55"]
   },
   "张三": {
     "role": "operator",
     "display_name": "张三",
-    "mac_addresses": ["AA:BB:CC:DD:EE:FF"]
+    "mac_addresses": ["AA-BB-CC-DD-EE-FF"]
   },
   "李四": {
     "role": "operator",
     "display_name": "李四",
-    "mac_addresses": ["11:22:33:44:55:66", "FF:EE:DD:CC:BB:AA"]
+    "mac_addresses": ["11-22-33-44-55-66", "FF-EE-DD-CC-BB-AA"]
   }
 }
 ```
@@ -153,7 +153,7 @@ ipconfig /all
 
 找到正在使用的网络适配器（有线或无线），记录 "物理地址" 或 "Physical Address"，格式为 `XX-XX-XX-XX-XX-XX`。
 
-填入 `user_pins.json` 时把 `-` 改为 `:`，例如 `00-1A-2B-3C-4D-5E` → `"00:1A:2B:3C:4D:5E"`。
+直接复制 `ipconfig /all` 中的物理地址填入即可，支持 `00-1A-2B-3C-4D-5E` 或 `00:1A:2B:3C:4D:5E` 两种格式。
 
 每个用户的 `mac_addresses` 数组可填多个 MAC（如有线 + 无线两张网卡）。
 

@@ -2,6 +2,6 @@
   "admin": {
     "role": "admin",
     "display_name": "管理员",
-    "mac_addresses": ["00:00:00:00:00:00"]
+    "mac_addresses": ["00-00-00-00-00-00"]
   }
 }

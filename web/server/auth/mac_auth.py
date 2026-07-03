@@ -59,7 +59,7 @@ def authenticate(username: str, client_ip: str) -> dict | None:
     if not user:
         return None
 
-    expected_macs = [m.upper() for m in user.get("mac_addresses", [])]
+    expected_macs = [m.upper().replace('-', ':') for m in user.get("mac_addresses", [])]
     if not expected_macs:
         return None
 
