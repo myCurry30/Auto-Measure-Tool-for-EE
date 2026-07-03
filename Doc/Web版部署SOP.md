@@ -223,9 +223,9 @@ python web\start.py --prod
 看到以下输出表示启动成功：
 
 ```
-[web] 生产模式 — http://0.0.0.0:8000
+[web] 生产模式 — http://0.0.0.0:8200
 INFO:     Started server process
-INFO:     Uvicorn running on http://0.0.0.0:8000
+INFO:     Uvicorn running on http://0.0.0.0:8200
 ```
 
 **保持运行**：不要关闭 cmd 窗口。下面配置为系统服务实现开机自启。
@@ -330,7 +330,7 @@ Get-ScheduledTask -TaskName "EE AutoTool Web"
 Restart-Computer -Force
 ```
 
-重启后在工程师笔记本浏览器访问 `http://<服务器IP>:8000`，能打开登录页即说明自启生效。
+重启后在工程师笔记本浏览器访问 `http://<服务器IP>:8200`，能打开登录页即说明自启生效。
 
 > 计划任务后台运行**不弹 CMD 窗口**，不会误关。日常启停用上述 PowerShell 命令，不要再手动 `python web\start.py --prod`。
 
@@ -341,14 +341,14 @@ Restart-Computer -Force
 > 在**服务器**上以**管理员身份**执行：Win+R → `powershell` → Ctrl+Shift+Enter
 
 ```powershell
-netsh advfirewall firewall add rule name="EE AutoTool Web" dir=in action=allow protocol=TCP localport=8000
+netsh advfirewall firewall add rule name="EE AutoTool Web" dir=in action=allow protocol=TCP localport=8200
 ```
 
 输出 `确定。` 即生效。
 
 > 如果之前启动服务器时已经弹出过防火墙拦截提示并点击了"允许访问"，此步可跳过。此命令是手动补加规则，适用于未弹窗的情况。
 
-**验证**：在工程师笔记本浏览器访问 `http://<服务器IP>:8000`，看到登录页面则防火墙配置正确。
+**验证**：在工程师笔记本浏览器访问 `http://<服务器IP>:8200`，看到登录页面则防火墙配置正确。
 
 ---
 
@@ -356,7 +356,7 @@ netsh advfirewall firewall add rule name="EE AutoTool Web" dir=in action=allow p
 
 ### 3.1 服务器本机验证
 
-浏览器打开 `http://localhost:8000`：
+浏览器打开 `http://localhost:8200`：
 
 - [ ] 看到登录页面（渐变色背景 + 用户名输入框）
 - [ ] 输入正确用户名 → 点击"进入" → 成功跳转主界面
@@ -364,7 +364,7 @@ netsh advfirewall firewall add rule name="EE AutoTool Web" dir=in action=allow p
 
 ### 3.2 局域网验证
 
-在工程师笔记本浏览器打开 `http://192.168.1.50:8000`（替换为实际 IP）：
+在工程师笔记本浏览器打开 `http://192.168.1.50:8200`（替换为实际 IP）：
 
 - [ ] 登录成功
 - [ ] 连接页 → 选择连接方式 → 连接示波器 → 看到状态变为"已连接"
@@ -379,7 +379,7 @@ netsh advfirewall firewall add rule name="EE AutoTool Web" dir=in action=allow p
 ### Q1: 浏览器打开一片空白或无法访问
 
 - 检查服务器 IP 是否可达：在工程师 PC 上 `ping 192.168.1.50`
-- 检查防火墙是否放行 8000 端口
+- 检查防火墙是否放行 8200 端口
 - 检查 `npm run build` 是否执行成功（`web/client/dist/` 目录是否存在）
 
 ### Q2: 登录提示"当前设备未注册"
@@ -413,7 +413,7 @@ netsh advfirewall firewall add rule name="EE AutoTool Web" dir=in action=allow p
 
 ```bash
 # 列出所有用户
-curl http://localhost:8000/api/auth/users -H "Authorization: Bearer <admin_token>"
+curl http://localhost:8200/api/auth/users -H "Authorization: Bearer <admin_token>"
 
 # 或者直接编辑文件
 notepad user_pins.json
@@ -563,8 +563,8 @@ npm pack node_modules      # 生成 .tgz 文件（不推荐，不如直接拷文
 | 项目 | 值 |
 |------|-----|
 | 服务器固定 IP | `________.________.________.________` |
-| 端口 | `8000` |
-| 工程师访问地址 | `http://________:8000` |
+| 端口 | `8200` |
+| 工程师访问地址 | `http://________:8200` |
 | 管理员姓名 | ________ |
 | 工程师姓名 | ________ |
 | 项目路径 | ________ |
