@@ -256,13 +256,17 @@ nssm start "EE AutoTool Web"
 
 ### 2.6 防火墙放行
 
-首次启动时 Windows 防火墙可能弹出拦截提示，**点击"允许访问"**。
-
-如果被拦截，手动添加规则：
+> 在**服务器**上以**管理员身份**执行：Win+R → `powershell` → Ctrl+Shift+Enter
 
 ```powershell
 netsh advfirewall firewall add rule name="EE AutoTool Web" dir=in action=allow protocol=TCP localport=8000
 ```
+
+输出 `确定。` 即生效。
+
+> 如果之前启动服务器时已经弹出过防火墙拦截提示并点击了"允许访问"，此步可跳过。此命令是手动补加规则，适用于未弹窗的情况。
+
+**验证**：在工程师笔记本浏览器访问 `http://<服务器IP>:8000`，看到登录页面则防火墙配置正确。
 
 ---
 
