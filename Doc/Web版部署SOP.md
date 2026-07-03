@@ -40,13 +40,31 @@
 
 ### 2.1 获取代码
 
-**方式 A: 从 Git 仓库拉取（推荐）**
+**方式 A: 从 Git 仓库拉取**
+
+> 适用于服务器能访问外网的场景。需要先在服务器上配置 SSH key 并添加到 GitHub。
+
+**A1. 配置 SSH key（仅首次）：**
+
+```powershell
+# 1. 生成密钥（一路回车）
+ssh-keygen -t ed25519 -C "server" -f "$env:USERPROFILE\.ssh\id_ed25519" -N '""'
+
+# 2. 查看公钥
+Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub"
+```
+
+将输出的 `ssh-ed25519 AAAA...` 整行复制 → 打开 https://github.com/settings/keys → New SSH Key → Title 填 `Server` → 粘贴 → Add SSH Key。
+
+**A2. 拉取代码：**
 
 ```bash
 git clone git@github.com:myCurry30/Auto-Measure-Tool-for-EE.git
-cd "EE_Power_on_AutoTool_VER2.0"
+cd "Auto-Measure-Tool-for-EE"
 git checkout feature/web-version
 ```
+
+首次连接会提示确认 GitHub 指纹，输入 `yes` 即可。
 
 **方式 B: 拷贝最小文件集（推荐）**
 
