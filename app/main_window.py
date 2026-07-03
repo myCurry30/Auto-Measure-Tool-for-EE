@@ -859,6 +859,9 @@ class MainWindow(QMainWindow):
         try:
             do_scope = self.config_panel.save_to_scope_cb.isChecked()
             do_local = self.config_panel.save_to_local_cb.isChecked()
+            use_ch = self.config_panel.ch_label_naming_cb.isChecked()
+            ch_labels = [self.state.ch1_label, self.state.ch2_label,
+                         self.state.ch3_label, self.state.ch4_label]
             capture.Capture_Pic(
                 self.state.osc, self.state.xls,
                 self.state.sheet_name or "Sheet1",
@@ -880,6 +883,8 @@ class MainWindow(QMainWindow):
                 seq_data_en=self.config_panel.seq_data_en,
                 mono_p_data_en=list(self.config_panel.mono_p_data_en),
                 mono_n_data_en=list(self.config_panel.mono_n_data_en),
+                use_ch_labels=use_ch,
+                ch_labels=ch_labels,
             )
             parts = []
             if do_local:
