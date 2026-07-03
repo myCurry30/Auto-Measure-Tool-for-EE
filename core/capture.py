@@ -59,7 +59,11 @@ def savepic(osc, pic_path, sheet_name, signals, signal_enables,
     Returns:
         Local file path of saved screenshot (or None if save_to_local=False)
     """
-    mkpath = '%s/%s' % (pic_path, sheet_name)
+    if use_ch_labels:
+        # CH Label mode: save directly under pic_path, no sheet subfolder
+        mkpath = pic_path
+    else:
+        mkpath = '%s/%s' % (pic_path, sheet_name)
     log.debug('Capture', f'Save path: {mkpath}')
     mkdir(mkpath)
 
@@ -77,6 +81,12 @@ def savepic(osc, pic_path, sheet_name, signals, signal_enables,
             name = ' TO '.join(active)
         else:
             name = 'screenshot'
+        # Monotony: append _R / _F suffix
+        if test_type == "monotony":
+            if flag_monotony_direction == 1:
+                name = '%s_R' % name
+            else:
+                name = '%s_F' % name
     elif test_type != "monotony":
         # Build name from active signals
         active = []
