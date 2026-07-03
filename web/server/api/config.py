@@ -25,9 +25,9 @@ class ApplyRequest(BaseModel):
 
 
 class PathsRequest(BaseModel):
-    file_path: str = ""
-    pic_path: str = ""
-    project_name: str = ""
+    file_path: str = ""       # Excel 模板文件路径（服务器可访问的路径）
+    pic_path: str = ""        # 截图保存到服务器本地的目录
+    project_name: str = ""    # 示波器磁盘上保存截图的路径
 
 
 @router.get("/current")

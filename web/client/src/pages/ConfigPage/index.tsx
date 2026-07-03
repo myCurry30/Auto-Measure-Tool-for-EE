@@ -144,14 +144,17 @@ export default function ConfigPage() {
     <div>
       <Card title={<><FolderOpenOutlined /> 文件路径设置</>} style={{ marginBottom: 16 }}>
         <Form layout="inline" form={pathForm} onFinish={handleSavePaths}>
-          <Form.Item name="file_path" label="Excel 文件路径" style={{ minWidth: 280 }}>
-            <Input placeholder="D:\Data\test.xlsx" style={{ width: 240 }} />
+          <Form.Item name="file_path" label="Excel 文件路径" style={{ minWidth: 280 }}
+            tooltip="服务器可访问的 Excel 模板文件路径（例如网络共享路径 \\10.31.133.57\share\test.xlsx）">
+            <Input placeholder="\\10.31.133.57\share\test.xlsx" style={{ width: 240 }} />
           </Form.Item>
-          <Form.Item name="pic_path" label="截图保存路径" style={{ minWidth: 280 }}>
+          <Form.Item name="pic_path" label="截图本地保存路径" style={{ minWidth: 280 }}
+            tooltip="示波器截图保存到服务器本地的目录">
             <Input placeholder="D:\Pic" style={{ width: 240 }} />
           </Form.Item>
-          <Form.Item name="project_name" label="示波器项目名" style={{ minWidth: 280 }}>
-            <Input placeholder="AutoTool" style={{ width: 240 }} />
+          <Form.Item name="project_name" label="示波器保存路径" style={{ minWidth: 280 }}
+            tooltip="示波器磁盘上保存截图的目录路径（如 C:\AutoTool）">
+            <Input placeholder="C:\AutoTool" style={{ width: 240 }} />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={pathsLoading} icon={<SaveOutlined />}>
