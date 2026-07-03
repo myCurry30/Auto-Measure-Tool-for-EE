@@ -198,7 +198,59 @@ INFO:     Started server process
 INFO:     Uvicorn running on http://0.0.0.0:8000
 ```
 
-**保持运行**：不要关闭 cmd 窗口。建议配置为 Windows 服务或计划任务自动启动。
+**保持运行**：不要关闭 cmd 窗口。下面配置为系统服务实现开机自启。
+
+#### 2.5.1 配置开机自启（计划任务 — 推荐）
+
+创建启动脚本 `D:\AutoTool\ee-autotool\start_server.bat`：
+
+```batch
+@echo off
+cd /d D:\AutoTool\ee-autotool
+python web\start.py --prod
+```
+
+然后以**管理员身份**打开 PowerShell，执行：
+
+```powershell
+# 创建计划任务：开机自动启动，后台运行
+$action = New-ScheduledTaskAction -Execute "D:\AutoTool\ee-autotool\start_server.bat"
+$trigger = New-ScheduledTaskTrigger -AtStartup
+$principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBattery -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
+Register-ScheduledTask -TaskName "EE AutoTool Web" -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force
+
+# 立即触发一次（不需要重启生效）
+Start-ScheduledTask -TaskName "EE AutoTool Web"
+```
+
+**管理命令**：
+
+```powershell
+Get-ScheduledTask -TaskName "EE AutoTool Web"    # 查看状态
+Start-ScheduledTask -TaskName "EE AutoTool Web"  # 手动启动
+Stop-ScheduledTask -TaskName "EE AutoTool Web"   # 手动停止
+Unregister-ScheduledTask -TaskName "EE AutoTool Web" -Confirm:$false  # 删除
+```
+
+#### 2.5.2 备选方案：NSSM 注册为 Windows 服务
+
+如果希望像系统服务一样通过 `services.msc` 管理，可以用 NSSM：
+
+```powershell
+# 1. 下载 nssm.exe（单文件，无需安装）
+# https://nssm.cc/download → 解压 nssm.exe 到 C:\Windows\System32\
+
+# 2. 注册服务
+nssm install "EE AutoTool Web" "C:\Path\To\python.exe" "D:\AutoTool\ee-autotool\web\start.py --prod"
+nssm set "EE AutoTool Web" AppDirectory "D:\AutoTool\ee-autotool"
+nssm set "EE AutoTool Web" Start SERVICE_AUTO_START
+
+# 3. 启动
+nssm start "EE AutoTool Web"
+```
+
+> NSSM 会自动重启崩溃的进程，比计划任务更健壮，但需要下载第三方工具。
 
 ---
 
