@@ -345,7 +345,31 @@ Restart-Computer -Force
 
 ---
 
-### 2.6 防火墙放行
+### 2.6 更新部署
+
+拿到最新代码包 `autotool-web.tar.gz` 后，在服务器上执行：
+
+```powershell
+# 1. 停止服务
+Stop-ScheduledTask -TaskName "EE AutoTool Web"
+
+# 2. 解压覆盖源文件
+tar -xzf autotool-web.tar.gz -C C:\EE_POWER_ON_Tool_WEB\autotool-web
+
+# 3. 重新构建前端（如果前端代码有变更）
+cd C:\EE_POWER_ON_Tool_WEB\autotool-web\web\client
+npm run build
+
+# 4. 启动服务
+Start-ScheduledTask -TaskName "EE AutoTool Web"
+```
+
+> 如果只更新了后端 `web/server/` 下的 Python 文件，跳过步骤 3（`npm run build`）。
+> `user_pins.json` 不会被代码包覆盖（包内不含该文件或需手动备份）。
+
+---
+
+### 2.7 防火墙放行
 
 > 在**服务器**上以**管理员身份**执行：Win+R → `powershell` → Ctrl+Shift+Enter
 
@@ -367,7 +391,7 @@ netsh advfirewall firewall add rule name="EE AutoTool Web" dir=in action=allow p
 
 - [ ] 看到登录页面（渐变色背景 + 用户名输入框）
 - [ ] 输入正确用户名 → 点击"进入" → 成功跳转主界面
-- [ ] 左侧边栏有：连接 / 配置 / 测量 / 手册
+- [ ] 左侧边栏有：Connect / 工作台 / Manual
 
 ### 3.2 局域网验证
 
@@ -375,8 +399,8 @@ netsh advfirewall firewall add rule name="EE AutoTool Web" dir=in action=allow p
 
 - [ ] 登录成功
 - [ ] 连接页 → 选择连接方式 → 连接示波器 → 状态变为"已连接"
-- [ ] 配置页 → 设置 Excel 路径、截图路径 → 保存
-- [ ] 测量页 → 点击 GO → 实时日志有输出
+- [ ] 工作台 → 设置 Excel 路径、截图路径 → 保存 → 自动打开 Excel
+- [ ] 工作台 → 点击 GO → 实时日志有输出
 - [ ] 手册页 → 点击左侧章节能跳转
 
 ---
