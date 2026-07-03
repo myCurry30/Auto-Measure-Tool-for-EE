@@ -202,7 +202,21 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 
 #### 2.5.1 配置开机自启（计划任务 — 推荐）
 
-创建启动脚本 `C:\EE_POWER_ON_Tool_WEB\autotool-web\start_server.bat`：
+先创建启动脚本。两种方式任选：
+
+**方式一：PowerShell 直接生成**
+
+```powershell
+@"
+@echo off
+cd /d C:\EE_POWER_ON_Tool_WEB\autotool-web
+python web\start.py --prod
+"@ | Out-File -FilePath "C:\EE_POWER_ON_Tool_WEB\autotool-web\start_server.bat" -Encoding ASCII
+```
+
+**方式二：记事本手动创建**
+
+打开记事本 → 粘贴以下 3 行 → 保存到 `C:\EE_POWER_ON_Tool_WEB\autotool-web\start_server.bat`：
 
 ```batch
 @echo off
