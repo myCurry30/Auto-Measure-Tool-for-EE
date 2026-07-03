@@ -56,7 +56,7 @@ Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub"
 
 将输出的 `ssh-ed25519 AAAA...` 整行复制 → 打开 https://github.com/settings/keys → New SSH Key → Title 填 `Server` → 粘贴 → Add SSH Key。
 
-**A2. 拉取代码：**
+**A2. 拉取代码（SSH）：**
 
 ```bash
 git clone git@github.com:myCurry30/Auto-Measure-Tool-for-EE.git
@@ -65,6 +65,16 @@ git checkout feature/web-version
 ```
 
 首次连接会提示确认 GitHub 指纹，输入 `yes` 即可。
+
+**A2-备选. 拉取代码（HTTPS，无需 SSH key）：**
+
+```bash
+git clone https://github.com/myCurry30/Auto-Measure-Tool-for-EE.git
+cd "Auto-Measure-Tool-for-EE"
+git checkout feature/web-version
+```
+
+> HTTPS 方式无需配置 SSH key，但某些网络环境可能被拦截。SSH 和 HTTPS 二选一即可。
 
 **方式 B: 拷贝最小文件集（推荐）**
 
