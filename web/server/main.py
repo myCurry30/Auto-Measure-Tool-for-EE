@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """启动/关闭生命周期."""
-    print("[web] 服务器启动 — bind 0.0.0.0:8000")
+    print("[web] 服务器启动 — bind 0.0.0.0:8200")
     yield
     print("[web] 服务器关闭")
 
