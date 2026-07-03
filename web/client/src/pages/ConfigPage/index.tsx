@@ -1,11 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, Form, Select, InputNumber, Input, Button, Tabs, Space, message, Switch, Row, Col } from "antd";
-import { SaveOutlined, UploadOutlined, DownloadOutlined } from "@ant-design/icons";
+import { SaveOutlined, UploadOutlined, DownloadOutlined, FolderOpenOutlined } from "@ant-design/icons";
 import { apiFetch } from "../../services/auth";
 
 export default function ConfigPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [paths, setPaths] = useState({ file_path: "", pic_path: "", project_name: "" });
+  const [pathsLoading, setPathsLoading] = useState(false);
+
+  const [pathForm] = Form.useForm();
+
+  useEffect(() => {
+    apiFetch("/api/config/paths").then(r => r.json()).then(data => {
+      setPaths(data);
+      pathForm.setFieldsValue(data);
+    }).catch(() => {});
+  }, []);
+
+  const handleSavePaths = async (values: any) => {
+    setPathsLoading(true);
+    try {
+      const res = await apiFetch("/api/config/paths", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) throw new Error((await res.json()).detail);
+      setPaths(values);
+      message.success("路径已保存");
+    } catch (e: any) {
+      message.error(e.message);
+    } finally {
+      setPathsLoading(false);
+    }
+  };
+
   const handleSave = async (values: any) => {
     setLoading(true);
     try {
@@ -112,6 +142,25 @@ export default function ConfigPage() {
 
   return (
     <div>
+      <Card title={<><FolderOpenOutlined /> 文件路径设置</>} style={{ marginBottom: 16 }}>
+        <Form layout="inline" form={pathForm} onFinish={handleSavePaths}>
+          <Form.Item name="file_path" label="Excel 文件路径" style={{ minWidth: 280 }}>
+            <Input placeholder="D:\Data\test.xlsx" style={{ width: 240 }} />
+          </Form.Item>
+          <Form.Item name="pic_path" label="截图保存路径" style={{ minWidth: 280 }}>
+            <Input placeholder="D:\Pic" style={{ width: 240 }} />
+          </Form.Item>
+          <Form.Item name="project_name" label="示波器项目名" style={{ minWidth: 280 }}>
+            <Input placeholder="AutoTool" style={{ width: 240 }} />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={pathsLoading} icon={<SaveOutlined />}>
+              保存路径
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
+
       <Card title="测量配置" extra={
         <Space>
           <Button icon={<UploadOutlined />} onClick={handleImport}>导入</Button>

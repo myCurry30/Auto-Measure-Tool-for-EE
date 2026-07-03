@@ -24,6 +24,12 @@ class ApplyRequest(BaseModel):
     sheet_name: str
 
 
+class PathsRequest(BaseModel):
+    file_path: str = ""
+    pic_path: str = ""
+    project_name: str = ""
+
+
 @router.get("/current")
 async def get_config(current: UserSession = Depends(get_current_user)):
     """获取当前会话的完整配置."""
@@ -69,3 +75,29 @@ async def apply_config(req: ApplyRequest, current: UserSession = Depends(get_cur
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"未找到 {key} 的配置")
     current.state.update(sheet_cfg)
     return {"ok": True, "applied": key}
+
+
+@router.post("/paths")
+async def set_paths(req: PathsRequest, current: UserSession = Depends(get_current_user)):
+    """设置文件路径（Excel、截图保存、示波器项目名）。"""
+    if req.file_path:
+        current.state["file_path"] = req.file_path
+    if req.pic_path:
+        current.state["pic_path"] = req.pic_path
+    if req.project_name:
+        current.state["project_name"] = req.project_name
+    return {
+        "file_path": current.state.get("file_path", ""),
+        "pic_path": current.state.get("pic_path", ""),
+        "project_name": current.state.get("project_name", ""),
+    }
+
+
+@router.get("/paths")
+async def get_paths(current: UserSession = Depends(get_current_user)):
+    """获取当前文件路径设置。"""
+    return {
+        "file_path": current.state.get("file_path", ""),
+        "pic_path": current.state.get("pic_path", ""),
+        "project_name": current.state.get("project_name", ""),
+    }
