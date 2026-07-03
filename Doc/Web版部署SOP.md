@@ -355,13 +355,45 @@ notepad user_pins.json
 
 ### Q7: 如何更新代码
 
+**如果是 git clone 部署的：**
+
 ```bash
 cd "C:\EE_POWER_ON_Tool_WEB\autotool-web"
-git pull                         # 拉取最新代码
-pip install -r requirements.txt  # 更新 Python 依赖
-cd web\client && npm install && npm run build  # 更新前端
-# 重启 python web\start.py --prod
+git pull
+pip install -r requirements.txt
+cd web\client && npm install && npm run build
+# 重启服务
 ```
+
+**如果是 zip 包部署的（无 .git 目录）：**
+
+在**源机器**（有 git 的机器）上拉取最新代码，重新打包：
+
+```bash
+# 源机器
+git pull
+powershell Compress-Archive -Path core,web,requirements.txt,user_pins.json,config.json -DestinationPath autotool-web.zip -Force
+```
+
+将 `autotool-web.zip` 传到服务器 → 解压覆盖原目录（`user_pins.json` 会被覆盖，注意先备份）：
+
+```powershell
+# 服务器上
+Stop-ScheduledTask -TaskName "EE AutoTool Web"
+# 备份 user_pins.json
+copy C:\EE_POWER_ON_Tool_WEB\autotool-web\user_pins.json C:\EE_POWER_ON_Tool_WEB\autotool-web\user_pins.json.bak
+# 解压覆盖
+Expand-Archive -Path autotool-web.zip -DestinationPath C:\EE_POWER_ON_Tool_WEB\autotool-web -Force
+# 恢复 user_pins.json
+copy C:\EE_POWER_ON_Tool_WEB\autotool-web\user_pins.json.bak C:\EE_POWER_ON_Tool_WEB\autotool-web\user_pins.json
+# 重建前端
+cd C:\EE_POWER_ON_Tool_WEB\autotool-web\web\client
+npm run build
+# 重启
+Start-ScheduledTask -TaskName "EE AutoTool Web"
+```
+
+> 如果只改了后端 `web/server/` 下的文件，无需 `npm run build`，直接重启服务即可。
 
 ---
 
