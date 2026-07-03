@@ -228,36 +228,45 @@ INFO:     Uvicorn running on http://0.0.0.0:8200
 
 #### 2.5.1 配置开机自启（计划任务 — 推荐）
 
-先创建启动脚本。两种方式任选：
+**步骤 1：找到 Python 完整路径**
 
-**方式一：PowerShell 直接生成**
+```powershell
+where python
+```
+
+输出类似 `C:\Users\Administrator\AppData\Local\Programs\Python\Python312\python.exe`，记下这个路径。
+
+**步骤 2：创建启动脚本**
+
+> 必须用 Python 的完整路径，不能用 `python` 简称（SYSTEM 账户环境下找不到）
+
+**方式一：PowerShell 直接生成（把下面 `FULL_PYTHON_PATH` 替换为步骤 1 的路径）**
 
 ```powershell
 @"
 @echo off
 cd /d C:\EE_POWER_ON_Tool_WEB\autotool-web
-python web\start.py --prod
+FULL_PYTHON_PATH web\start.py --prod
 "@ | Out-File -FilePath "C:\EE_POWER_ON_Tool_WEB\autotool-web\start_server.bat" -Encoding ASCII
 ```
 
 **方式二：记事本手动创建**
 
-打开记事本 → 粘贴以下 3 行 → 保存到 `C:\EE_POWER_ON_Tool_WEB\autotool-web\start_server.bat`：
+打开记事本 → 粘贴以下内容（替换 Python 路径）→ 保存为 `start_server.bat`：
 
 ```batch
 @echo off
 cd /d C:\EE_POWER_ON_Tool_WEB\autotool-web
-python web\start.py --prod
+C:\Users\Administrator\AppData\Local\Programs\Python\Python312\python.exe web\start.py --prod
 ```
 
-然后以**管理员身份**打开 PowerShell，执行：
+**步骤 3：创建计划任务（管理员 PowerShell）**
 
 ```powershell
-# 创建计划任务：开机自动启动，后台运行
 $action = New-ScheduledTaskAction -Execute "C:\EE_POWER_ON_Tool_WEB\autotool-web\start_server.bat"
-$trigger = New-ScheduledTaskTrigger -AtStartup
+$trigger = New-ScheduledTaskTrigger -AtStartup -RandomDelay (New-TimeSpan -Seconds 30)
 $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit (New-TimeSpan -Days 365)
 Register-ScheduledTask -TaskName "EE AutoTool Web" -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force
 
 # 立即触发一次（不需要重启生效）
