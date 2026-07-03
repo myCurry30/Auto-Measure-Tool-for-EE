@@ -2,8 +2,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Layout, Menu, Typography } from "antd";
 import {
   LinkOutlined,
-  SettingOutlined,
-  PlayCircleOutlined,
+  ExperimentOutlined,
   BookOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
@@ -13,8 +12,7 @@ const { Sider, Content, Footer } = Layout;
 
 const menuItems = [
   { key: "/connect", icon: <LinkOutlined />, label: "Connect" },
-  { key: "/config", icon: <SettingOutlined />, label: "Config" },
-  { key: "/measure", icon: <PlayCircleOutlined />, label: "Measure" },
+  { key: "/workbench", icon: <ExperimentOutlined />, label: "工作台" },
   { key: "/help", icon: <BookOutlined />, label: "Manual" },
 ];
 

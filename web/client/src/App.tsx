@@ -5,8 +5,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import AppLayout from "./layouts/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import ConnectPage from "./pages/ConnectPage";
-import ConfigPage from "./pages/ConfigPage";
-import MeasurePage from "./pages/MeasurePage";
+import WorkbenchPage from "./pages/WorkbenchPage";
 import HelpPage from "./pages/HelpPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -29,22 +28,11 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
-              <Route
-                path="/connect"
-                element={<ConnectPage />}
-              />
-              <Route
-                path="/config"
-                element={<ConfigPage />}
-              />
-              <Route
-                path="/measure"
-                element={<MeasurePage />}
-              />
-              <Route
-                path="/help"
-                element={<HelpPage />}
-              />
+              <Route path="/connect" element={<ConnectPage />} />
+              <Route path="/workbench" element={<WorkbenchPage />} />
+              <Route path="/config" element={<Navigate to="/workbench" replace />} />
+              <Route path="/measure" element={<Navigate to="/workbench" replace />} />
+              <Route path="/help" element={<HelpPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
