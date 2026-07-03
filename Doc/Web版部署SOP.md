@@ -268,6 +268,44 @@ nssm start "EE AutoTool Web"
 
 > NSSM 会自动重启崩溃的进程，比计划任务更健壮，但需要下载第三方工具。
 
+#### 2.5.3 服务日常管理
+
+> 以下命令均在服务器上以**管理员身份** PowerShell 执行。
+
+**恢复服务（CMD 窗口被误关、重启后手动拉起）：**
+
+```powershell
+Start-ScheduledTask -TaskName "EE AutoTool Web"
+```
+
+等几秒后工程师即可访问。
+
+**停止服务：**
+
+```powershell
+Stop-ScheduledTask -TaskName "EE AutoTool Web"
+```
+
+**查看服务状态：**
+
+```powershell
+Get-ScheduledTask -TaskName "EE AutoTool Web"
+```
+
+关键看 `State` 字段 — `Ready`（已就绪，未运行）、`Running`（正在运行）、`Disabled`（已禁用）。
+
+**验证开机自启：**
+
+选人少时重启服务器测试：
+
+```powershell
+Restart-Computer -Force
+```
+
+重启后在工程师笔记本浏览器访问 `http://<服务器IP>:8000`，能打开登录页即说明自启生效。
+
+> 计划任务后台运行**不弹 CMD 窗口**，不会误关。日常启停用上述 PowerShell 命令，不要再手动 `python web\start.py --prod`。
+
 ---
 
 ### 2.6 防火墙放行
