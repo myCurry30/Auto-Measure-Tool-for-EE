@@ -53,7 +53,7 @@ git checkout feature/web-version
 Web 部署只需要以下文件，不需要整个项目：
 
 ```
-目标路径: D:\AutoTool\ee-autotool\
+目标路径: C:\EE_POWER_ON_Tool_WEB\autotool-web\
 
 core/              ✅ 示波器驱动 / 数据采集 / Excel 操作
 web/               ✅ FastAPI 后端 + React 前端源码
@@ -76,7 +76,7 @@ powershell Compress-Archive -Path core,web,requirements.txt,user_pins.json,confi
 tar -czf autotool-web.tar.gz core/ web/ requirements.txt user_pins.json config.json
 ```
 
-将 `autotool-web.zip` 拷贝到目标机器 → 解压到 `D:\AutoTool\ee-autotool\`。
+将 `autotool-web.zip` 拷贝到目标机器 → 解压到 `C:\EE_POWER_ON_Tool_WEB\autotool-web\`。
 
 ---
 
@@ -84,7 +84,7 @@ tar -czf autotool-web.tar.gz core/ web/ requirements.txt user_pins.json config.j
 
 ```bash
 # 进入项目目录
-cd "D:\AutoTool\ee-autotool"
+cd "C:\EE_POWER_ON_Tool_WEB\autotool-web"
 
 # Python 依赖
 pip install -r requirements.txt
@@ -202,11 +202,11 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 
 #### 2.5.1 配置开机自启（计划任务 — 推荐）
 
-创建启动脚本 `D:\AutoTool\ee-autotool\start_server.bat`：
+创建启动脚本 `C:\EE_POWER_ON_Tool_WEB\autotool-web\start_server.bat`：
 
 ```batch
 @echo off
-cd /d D:\AutoTool\ee-autotool
+cd /d C:\EE_POWER_ON_Tool_WEB\autotool-web
 python web\start.py --prod
 ```
 
@@ -214,7 +214,7 @@ python web\start.py --prod
 
 ```powershell
 # 创建计划任务：开机自动启动，后台运行
-$action = New-ScheduledTaskAction -Execute "D:\AutoTool\ee-autotool\start_server.bat"
+$action = New-ScheduledTaskAction -Execute "C:\EE_POWER_ON_Tool_WEB\autotool-web\start_server.bat"
 $trigger = New-ScheduledTaskTrigger -AtStartup
 $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBattery -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
@@ -242,8 +242,8 @@ Unregister-ScheduledTask -TaskName "EE AutoTool Web" -Confirm:$false  # 删除
 # https://nssm.cc/download → 解压 nssm.exe 到 C:\Windows\System32\
 
 # 2. 注册服务
-nssm install "EE AutoTool Web" "C:\Path\To\python.exe" "D:\AutoTool\ee-autotool\web\start.py --prod"
-nssm set "EE AutoTool Web" AppDirectory "D:\AutoTool\ee-autotool"
+nssm install "EE AutoTool Web" "C:\Path\To\python.exe" "C:\EE_POWER_ON_Tool_WEB\autotool-web\web\start.py --prod"
+nssm set "EE AutoTool Web" AppDirectory "C:\EE_POWER_ON_Tool_WEB\autotool-web"
 nssm set "EE AutoTool Web" Start SERVICE_AUTO_START
 
 # 3. 启动
@@ -342,7 +342,7 @@ notepad user_pins.json
 ### Q7: 如何更新代码
 
 ```bash
-cd "D:\AutoTool\ee-autotool"
+cd "C:\EE_POWER_ON_Tool_WEB\autotool-web"
 git pull                         # 拉取最新代码
 pip install -r requirements.txt  # 更新 Python 依赖
 cd web\client && npm install && npm run build  # 更新前端
@@ -371,7 +371,7 @@ cd web\client && npm install && npm run build  # 更新前端
 
 ```bash
 # 进入项目目录
-cd "D:\AutoTool\ee-autotool"
+cd "C:\EE_POWER_ON_Tool_WEB\autotool-web"
 
 # 创建离线包目录
 mkdir pip_offline
@@ -385,7 +385,7 @@ pip download -r requirements.txt -d pip_offline
 在**目标机器（无外网）**上：
 
 ```bash
-cd "D:\AutoTool\ee-autotool"
+cd "C:\EE_POWER_ON_Tool_WEB\autotool-web"
 pip install --no-index --find-links=pip_offline -r requirements.txt
 ```
 
