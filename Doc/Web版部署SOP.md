@@ -231,7 +231,7 @@ python web\start.py --prod
 $action = New-ScheduledTaskAction -Execute "C:\EE_POWER_ON_Tool_WEB\autotool-web\start_server.bat"
 $trigger = New-ScheduledTaskTrigger -AtStartup
 $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBattery -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
 Register-ScheduledTask -TaskName "EE AutoTool Web" -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force
 
 # 立即触发一次（不需要重启生效）
