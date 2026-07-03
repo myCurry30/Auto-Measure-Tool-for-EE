@@ -111,13 +111,15 @@ ipconfig
 
 #### 2.3.2 配置前端 API 地址
 
-编辑 `web\client\.env`：
+`web\client\.env` 已预置默认值：
 
 ```
-VITE_API_BASE=http://192.168.1.50:8000
+VITE_API_BASE=http://10.31.133.57:8200
 ```
 
-> ⚠️ 把 `192.168.1.50` 换成你的实际服务器 IP
+如果服务器 IP 或端口有变动，编辑此文件修改地址后重新 `npm run build` 即可。
+
+> 提交到代码仓库的默认值避免了每次更新被覆盖为 `localhost`。
 
 #### 2.3.3 配置用户和 MAC 地址
 
