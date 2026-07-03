@@ -48,9 +48,35 @@ cd "EE_Power_on_AutoTool_VER2.0"
 git checkout feature/web-version
 ```
 
-**方式 B: 拷贝文件夹**
+**方式 B: 拷贝最小文件集（推荐）**
 
-将整个项目文件夹（`EE_Power_on_AutoTool_VER2.0`）拷贝到目标机器任意路径，例如 `D:\AutoTool\`。
+Web 部署只需要以下文件，不需要整个项目：
+
+```
+目标路径: D:\AutoTool\ee-autotool\
+
+core/              ✅ 示波器驱动 / 数据采集 / Excel 操作
+web/               ✅ FastAPI 后端 + React 前端源码
+requirements.txt   ✅ Python 依赖清单
+user_pins.json     ✅ 用户 MAC 绑定配置
+config.json        ✅ 配置（如有）
+```
+
+> 桌面版代码（`app/`、`widgets/`、`dialogs/`、`main.py`、`My_ui.py` 等）和开发目录（`.claude/`、`.agents/`、`installer/`、`Doc/`）**不需要**拷贝。
+
+**打包方式：**
+
+在源机器项目根目录下：
+
+```bash
+# 打包为 zip（Windows）
+powershell Compress-Archive -Path core,web,requirements.txt,user_pins.json,config.json -DestinationPath autotool-web.zip
+
+# 或打包为 tar.gz（Git Bash）
+tar -czf autotool-web.tar.gz core/ web/ requirements.txt user_pins.json config.json
+```
+
+将 `autotool-web.zip` 拷贝到目标机器 → 解压到 `D:\AutoTool\ee-autotool\`。
 
 ---
 
@@ -58,7 +84,7 @@ git checkout feature/web-version
 
 ```bash
 # 进入项目目录
-cd "D:\AutoTool\EE_Power_on_AutoTool_VER2.0"
+cd "D:\AutoTool\ee-autotool"
 
 # Python 依赖
 pip install -r requirements.txt
@@ -260,11 +286,104 @@ notepad user_pins.json
 ### Q7: 如何更新代码
 
 ```bash
-cd "D:\AutoTool\EE_Power_on_AutoTool_VER2.0"
+cd "D:\AutoTool\ee-autotool"
 git pull                         # 拉取最新代码
 pip install -r requirements.txt  # 更新 Python 依赖
 cd web\client && npm install && npm run build  # 更新前端
 # 重启 python web\start.py --prod
+```
+
+---
+
+## 附：纯内网部署（目标机器无外网）
+
+如果部署的服务器只能访问局域网，无法下载任何东西，需要提前在一台**有外网的机器**上准备好以下文件，再拷贝过去。
+
+### A. 提前下载清单
+
+| # | 文件 | 下载方式 | 大小约 |
+|---|------|---------|--------|
+| 1 | Python 3.12 安装包 | https://www.python.org/downloads/ | ~25MB |
+| 2 | Node.js 18+ 安装包 | https://nodejs.org/ | ~30MB |
+| 3 | NI-VISA 驱动 | https://www.ni.com → 搜索 NI-VISA | ~400MB |
+| 4 | Python 依赖离线包（见步骤 B） | `pip download` | ~50MB |
+| 5 | 前端 node_modules（见步骤 C） | 从源机器直接拷贝 | ~200MB |
+
+### B. Python 依赖离线包
+
+在**有外网的机器**上（和服务器同 Windows 版本、同 Python 版本）：
+
+```bash
+# 进入项目目录
+cd "D:\AutoTool\ee-autotool"
+
+# 创建离线包目录
+mkdir pip_offline
+
+# 下载所有依赖的 .whl 文件（不下载 pywin32，它是预装的系统扩展）
+pip download -r requirements.txt -d pip_offline
+
+# 把整个 pip_offline 文件夹拷到目标机器
+```
+
+在**目标机器（无外网）**上：
+
+```bash
+cd "D:\AutoTool\ee-autotool"
+pip install --no-index --find-links=pip_offline -r requirements.txt
+```
+
+### C. 前端依赖
+
+**方式一（推荐）：从源机器直接拷贝 node_modules**
+
+在那台有外网的机器上，项目路径下：
+
+```bash
+cd web\client
+npm install               # 会生成 node_modules 文件夹
+```
+
+把整个 `web\client\node_modules` 文件夹（约 200MB）拷贝到目标机器的相同位置。
+
+目标机器上**不再需要执行 `npm install`**，直接可以 `npm run build`。
+
+**方式二：离线打包**
+
+```bash
+# 有外网的机器上
+cd web\client
+npm pack node_modules      # 生成 .tgz 文件（不推荐，不如直接拷文件夹）
+
+# 或者用 npm ci --prefer-offline 配合缓存（需要预填充 npm cache）
+```
+
+### D. 纯内网部署完整流程
+
+```
+有外网的机器（提前准备）:
+
+1. 下载 Python 安装包 → 拷到 U 盘
+2. 下载 Node.js 安装包 → 拷到 U 盘  
+3. 下载 NI-VISA 安装包 → 拷到 U 盘
+4. 创建项目目录 && mkdir pip_offline
+5. 拷贝最小文件（core/, web/, requirements.txt, user_pins.json, config.json）到项目目录
+6. pip download -r requirements.txt -d pip_offline
+7. cd web\client && npm install
+8. 把项目目录（含 pip_offline + node_modules）打包拷到 U 盘
+
+目标机器（无外网）:
+         ↓ 从 U 盘拷入
+
+1. 安装 Python（运行安装包）
+2. 安装 Node.js（运行安装包）
+3. 安装 NI-VISA（运行安装包）
+4. 解压项目到目标路径
+5. pip install --no-index --find-links=pip_offline -r requirements.txt
+6. cd web\client && npm run build
+7. 编辑 user_pins.json（用户 + MAC）
+8. 编辑 web\client\.env（服务器 IP）
+9. python web\start.py --prod
 ```
 
 ---
