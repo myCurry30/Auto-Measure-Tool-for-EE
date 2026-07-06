@@ -915,8 +915,8 @@ class ConfigPanel(QWidget):
         log.info('ConfigPanel', 'Save to Scope: %s' % ('ON' if enabled else 'OFF'))
 
     def _on_ch_label_naming_toggled(self, enabled):
-        """自由保存图片模式: disable Excel/Scope, force Local on, disable Data."""
-        log.info('ConfigPanel', 'CH Label Naming: %s' % ('ON' if enabled else 'OFF'))
+        """Free Save: disable Excel/Scope, force Local on, disable Data."""
+        log.info('ConfigPanel', 'Free Save: %s' % ('ON' if enabled else 'OFF'))
         if enabled:
             # Save previous state so we can restore
             self._prev_excel = self.save_to_excel_cb.isChecked()
