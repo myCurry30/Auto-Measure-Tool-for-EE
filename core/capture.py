@@ -191,30 +191,41 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
 
     # --- Step 1: Save screenshot picture ---
     if save_pic:
-        # Always save locally if Excel insert is requested (need a temp file).
-        # The save_to_local checkbox only controls whether the file is KEPT.
+        log.info('Capture', '[Pic] Starting screenshot capture (to_local=%s, to_excel=%s)' % (
+            save_to_local, save_to_excel))
         need_local = save_to_local or (save_to_excel and bool(xls))
-        pic_file_path = savepic(
-            osc, pic_path, sheet_name, signals, signal_enables,
-            project_name, test_type, flag_monotony_direction,
-            save_to_scope=save_to_scope,
-            save_to_local=need_local,
-            use_ch_labels=use_ch_labels,
-            ch_labels=ch_labels,
-            ch_enables=ch_enables)
-        pic_is_temp = False
+        try:
+            pic_file_path = savepic(
+                osc, pic_path, sheet_name, signals, signal_enables,
+                project_name, test_type, flag_monotony_direction,
+                save_to_scope=save_to_scope,
+                save_to_local=need_local,
+                use_ch_labels=use_ch_labels,
+                ch_labels=ch_labels,
+                ch_enables=ch_enables)
+            if pic_file_path:
+                log.success('Capture', '[Pic] Screenshot saved: %s' % pic_file_path)
+            else:
+                log.info('Capture', '[Pic] Screenshot saved to scope only (not local)')
+        except Exception as e:
+            log.error('Capture', '[Pic] Screenshot FAILED: %s' % e)
+            raise
 
+        pic_is_temp = False
         if pic_file_path:
             pic_file_path = os.path.abspath(pic_file_path)
             if not save_to_local:
-                pic_is_temp = True  # cleanup after Excel insert
+                pic_is_temp = True
 
-        # Insert picture into Excel if requested
         if save_to_excel and xls and pic_file_path:
-            xls.addPicture(sheet_name, pic_file_path, m, 0, 0, 0, 0,
-                          test_type, flag_monotony_direction, pic_cols)
+            try:
+                xls.addPicture(sheet_name, pic_file_path, m, 0, 0, 0, 0,
+                              test_type, flag_monotony_direction, pic_cols)
+                log.success('Capture', '[Pic] Inserted into Excel at row %d' % m)
+            except Exception as e:
+                log.error('Capture', '[Pic] Excel insert FAILED at row %d: %s' % (m, e))
+                raise
 
-        # Remove temp file after Excel insert
         if pic_is_temp and pic_file_path:
             try:
                 os.remove(pic_file_path)
@@ -228,20 +239,22 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
     value_top = value_base = value_max = value_min = None
 
     if save_data and xls:
+        log.info('Capture', '[Data] Starting data read from scope (type=%s)' % test_type)
         xls.save()
         _pulse()
 
         if test_type != "monotony":
             if not seq_data_en:
-                log.debug('Capture', 'Sequence DELAY disabled, skipping')
+                log.info('Capture', '[Data] Sequence DELAY disabled, skipping')
                 delay_time = ''
             else:
                 try:
                     source = osc.query('MEASUrement:MEAS5:SOUrce1?')
-                    log.info('Capture', 'MEAS5 (DELAY) source=%s' % source)
+                    log.info('Capture', '[Data] MEAS5 (DELAY) source=%s' % source)
                     delay_time_raw = osc.query('MEASUrement:MEAS5:MEAN?')
-                except Exception:
-                    log.warning('Capture', 'No DELAY measurement (MEAS5) on scope')
+                    log.info('Capture', '[Data] MEAS5 (DELAY) raw=%s' % delay_time_raw)
+                except Exception as e:
+                    log.error('Capture', '[Data] MEAS5 (DELAY) query FAILED: %s' % e)
                     delay_time_raw = None
 
                 if not delay_time_raw:
@@ -313,12 +326,18 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
             type_to_idx = {'TOP': 0, 'BASE': 1, 'MAX': 2, 'MIN': 3}
 
             def _query_meas(meas_name, label):
-                raw = osc.query('MEASUrement:%s:MEAN?' % meas_name)
-                log.debug('Capture', 'Query Value_%s: %s' % (label, raw))
-                if raw.find('MEASUREMENT') != -1:
-                    if mso5:
-                        raw = raw[26:]
-                return '%.4f' % float(eval(raw))
+                try:
+                    raw = osc.query('MEASUrement:%s:MEAN?' % meas_name)
+                    log.info('Capture', '[Data] Query %s(%s): %s' % (label, meas_name, raw.strip()))
+                    if raw.find('MEASUREMENT') != -1:
+                        if mso5:
+                            raw = raw[26:]
+                    val = '%.4f' % float(eval(raw))
+                    log.success('Capture', '[Data] %s = %s' % (label, val))
+                    return val
+                except Exception as e:
+                    log.error('Capture', '[Data] %s query FAILED: %s' % (label, e))
+                    return ''
 
             def _maybe_query(meas_type, fallback):
                 """Query measurement value if enabled and available."""
@@ -326,7 +345,7 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                     return ''
                 idx = type_to_idx.get(meas_type, -1)
                 if idx >= 0 and not en_flags[idx]:
-                    log.debug('Capture', '%s disabled, skipping' % meas_type)
+                    log.info('Capture', '[Data] %s disabled, skipping' % meas_type)
                     return ''
                 return _query_meas(meas_map[meas_type], meas_type)
 
