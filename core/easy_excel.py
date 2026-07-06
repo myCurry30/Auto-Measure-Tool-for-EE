@@ -69,7 +69,11 @@ class EasyExcel:
     def setCell(self, sheet, row, col, value):
         sht = self.xlBook.Worksheets(sheet)
         sht.Activate()
-        sht.Cells(row, col).Value = value
+        cell = sht.Cells(row, col)
+        # If merged, unmerge before writing
+        if cell.MergeArea.Rows.Count > 1 or cell.MergeArea.Columns.Count > 1:
+            cell.MergeArea.UnMerge()
+        cell.Value = value
 
     def getRange(self, sheet, row1, col1, row2, col2):
         sht = self.xlBook.Worksheets(sheet)
@@ -121,8 +125,10 @@ class EasyExcel:
             cell = sht.Range(cell_addr)
         print(f"[EasyExcel] addPicture: type={flag_Test_items}, dir={flag_monotony_direction}, "
               f"cell={cell_addr}, row={target_row}, W={Width:.0f}, H={Height:.0f}")
+        # Handle merged cells: unmerge before inserting picture
+        if cell.MergeArea.Rows.Count > 1 or cell.MergeArea.Columns.Count > 1:
+            cell.MergeArea.UnMerge()
         cell.Select()
-        cell.ClearFormats()
         sht.Shapes.AddPicture(PictureName, LinkToFile=False, SaveWithDocument=True,
                               Left=cell.Left + left_offset, Top=cell.Top + Top_offset,
                               Width=Width, Height=Height)
