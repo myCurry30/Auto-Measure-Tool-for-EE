@@ -91,7 +91,6 @@ def measure_sequence(osc, mso5):
         osc.measure(7, 'CH1', 'Minimum', 1)
         osc.measure(8, 'CH2', 'MAXimum', 1)
         osc.measure(9, 'CH2', 'Minimum', 1)
-    osc.trigger('NORMAL', 'CH1', 'RISE', 0.5)
 
 
 def measure_monotony(osc, mso5):
@@ -115,4 +114,3 @@ def measure_monotony(osc, mso5):
         osc.measure(4, 'CH1', 'Minimum', 1)
         osc.measure(5, 'CH1', 'RISETIME', 1)
         osc.measure(6, 'CH1', 'FALLTIME', 1)
-    osc.trigger('NORMAL', 'CH1', 'RISE', 0.5)
