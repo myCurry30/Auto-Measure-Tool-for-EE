@@ -1080,8 +1080,8 @@ class MainWindow(QMainWindow):
         _SCALE_UNITS = [("ns", 1e-9), ("μs", 1e-6), ("ms", 1e-3), ("s", 1.0)]
         scale_row = QHBoxLayout()
         scale_spin = QDoubleSpinBox()
-        scale_spin.setDecimals(3)
-        scale_spin.setRange(0.001, 99999.0)
+        scale_spin.setDecimals(0)
+        scale_spin.setRange(1, 99999)
         unit_combo = QComboBox()
         for label, _ in _SCALE_UNITS:
             unit_combo.addItem(label)
