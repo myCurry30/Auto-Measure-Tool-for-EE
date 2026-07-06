@@ -137,6 +137,7 @@ class ConfigPanel(QWidget):
     save_data_clicked = Signal()
     set_mso_clicked = Signal()
     save_pic_and_data_clicked = Signal()
+    config_imported = Signal()
 
     def __init__(self, state, parent=None):
         super().__init__(parent)
@@ -1250,6 +1251,7 @@ class ConfigPanel(QWidget):
             sheets = cfg.get("sheets", {})
             keys = list(sheets.keys())
             log.info('ConfigPanel', f'Config imported from {path} ({len(sheets)} entries: {keys})')
+            self.config_imported.emit()
 
         except Exception as e:
             log.debug('ConfigPanel', f'Error importing config: {e}')

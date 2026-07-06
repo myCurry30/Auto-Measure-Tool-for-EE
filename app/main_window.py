@@ -330,6 +330,23 @@ class MainWindow(QMainWindow):
             if self._last_ip:
                 self.conn_info_label.setText(f"IP: {self._last_ip}:{self._last_port}")
 
+    def _on_config_imported(self):
+        """Sync connection info from config_panel to MainWindow after manual import."""
+        cp = self.config_panel
+        if hasattr(cp, '_connect_method'):
+            self._last_connect_method = cp._connect_method
+        if hasattr(cp, '_connect_ip'):
+            self._last_ip = cp._connect_ip
+        if hasattr(cp, '_connect_port'):
+            self._last_port = cp._connect_port
+        if hasattr(cp, '_connect_use_socket'):
+            self._last_use_socket = cp._connect_use_socket
+        if self._last_ip:
+            self.conn_info_label.setText(f"IP: {self._last_ip}:{self._last_port}")
+        elif self._last_connect_method != 'ip':
+            self.conn_info_label.setText("GPIB/IP")
+        log.info('MainWindow', f'Config imported: method={self._last_connect_method}, IP={self._last_ip}')
+
     def connect_signals(self):
         """Connect all signals between components and business logic."""
 
@@ -345,6 +362,7 @@ class MainWindow(QMainWindow):
         self.config_panel.save_pic_and_data_clicked.connect(self._on_save_pic_and_data)
         self.config_panel.set_label_clicked.connect(self._on_set_label)
         self.config_panel.set_mso_clicked.connect(self._on_set_mso)
+        self.config_panel.config_imported.connect(self._on_config_imported)
 
         # State status updates
         self.state.status_message_changed.connect(self.status_label.setText)
