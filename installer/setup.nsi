@@ -86,8 +86,8 @@ Section "MainSection" SEC01
     ; ── Main executable ──────────────────────────────────────────────────
     File "..\dist\EE_Power_On_AutoTool.exe"
 
-    ; ── Config template (shipped as default, user settings excluded) ──
-    File "..\config.json"
+    ; ── Config template (optional — shipped as default if present) ──
+    File /nonfatal "..\config.json"
 
     ; ── Create runtime directories ────────────────────────────────────────
     CreateDirectory "$INSTDIR\outputs"
