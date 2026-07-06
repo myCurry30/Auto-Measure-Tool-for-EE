@@ -232,11 +232,11 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                 delay_time = ''
             else:
                 try:
-                    source = osc.query('MEASUrement:MEAS7:SOUrce1?')
-                    log.info('Capture', 'MEAS7 (DELAY) source=%s' % source)
-                    delay_time_raw = osc.query('MEASUrement:MEAS7:MAX?')
+                    source = osc.query('MEASUrement:MEAS5:SOUrce1?')
+                    log.info('Capture', 'MEAS5 (DELAY) source=%s' % source)
+                    delay_time_raw = osc.query('MEASUrement:MEAS5:MAX?')
                 except Exception:
-                    log.warning('Capture', 'No DELAY measurement (MEAS7) on scope')
+                    log.warning('Capture', 'No DELAY measurement (MEAS5) on scope')
                     delay_time_raw = None
 
                 if not delay_time_raw:
@@ -271,14 +271,14 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
 
         if test_type == "monotony":
             # Monotony: query known MEAS names directly — no LIST?/TYPE? needed.
-            # measure_monotony creates: MEAS1=Top, MEAS2=Base,
-            # MEAS5=MAXimum, MEAS6=Minimum
+            # measure_monotony creates: MEAS1=TOP, MEAS2=BASE,
+            # MEAS3=MAX, MEAS4=MIN, MEAS5=RISETIME, MEAS6=FALLTIME
             ch_names = ['CH1', 'CH2', 'CH3', 'CH4']
             meas_map = {}  # type_name → measurement_name
 
             for name, expected_type in [('MEAS1', 'TOP'), ('MEAS2', 'BASE'),
-                                         ('MEAS5', 'MAX'), ('MEAS6', 'MIN'),
-                                         ('MEAS10', 'RISE'), ('MEAS11', 'FALL')]:
+                                         ('MEAS3', 'MAX'), ('MEAS4', 'MIN'),
+                                         ('MEAS5', 'RISE'), ('MEAS6', 'FALL')]:
                 try:
                     source = osc.query('MEASUrement:%s:SOUrce1?' % name)
                     source_upper = source.strip().upper() if source else ''
