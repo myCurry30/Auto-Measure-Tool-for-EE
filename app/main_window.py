@@ -1061,6 +1061,20 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self._handle_connection_error(e, "Set Label")
 
+    @staticmethod
+    def _fmt_scale(s):
+        """Format time in seconds to a user-friendly unit string."""
+        if abs(s) >= 1: return f'{s:.3g}s'
+        if abs(s) >= 1e-3: return f'{s*1e3:.3g}ms'
+        if abs(s) >= 1e-6: return f'{s*1e6:.3g}μs'
+        return f'{s*1e9:.3g}ns'
+
+    @staticmethod
+    def _fmt_level(v):
+        """Format voltage to a user-friendly unit string."""
+        if abs(v) >= 1: return f'{v:.3g}V'
+        return f'{v*1e3:.3g}mV'
+
     def _set_mso_horizontal(self):
         """Settings → MSO Horizontal: dialog to configure scope horizontal parameters."""
         from PySide6.QtWidgets import (QDialog, QFormLayout, QComboBox,
@@ -1161,10 +1175,10 @@ class MainWindow(QMainWindow):
                 osc.write(f'HORIZONTAL:MODE:SCALE {cp.hor_scale:g}')
                 osc.horpos(cp.hor_pos)
                 osc.trigger('NORMAL', cp.trig_channel, cp.trig_edge, cp.trig_level)
-                self.state.set_status(f"Horizontal: {cp.hor_mode} {cp.hor_scale:g}s/div {cp.hor_pos}%"
-                    f" Trig:{cp.trig_channel} {cp.trig_edge} {cp.trig_level:g}V")
-            log.info('MainWindow', f"MSO HOR: mode={cp.hor_mode}, scale={cp.hor_scale:g}, pos={cp.hor_pos}"
-                f" trig={cp.trig_channel}/{cp.trig_edge}/{cp.trig_level:g}V")
+                self.state.set_status(f"Horizontal: {cp.hor_mode} {self._fmt_scale(cp.hor_scale)}/div {cp.hor_pos}%"
+                    f" Trig:{cp.trig_channel} {cp.trig_edge} {self._fmt_level(cp.trig_level)}")
+            log.info('MainWindow', f"MSO HOR: mode={cp.hor_mode}, scale={self._fmt_scale(cp.hor_scale)}, pos={cp.hor_pos}"
+                f" trig={cp.trig_channel}/{cp.trig_edge}/{self._fmt_level(cp.trig_level)}")
 
         btns.button(QDialogButtonBox.Apply).clicked.connect(_apply)
         if dlg.exec() == QDialog.Accepted:
@@ -1314,8 +1328,8 @@ class MainWindow(QMainWindow):
             osc.state('run')
             self.state.set_status("MSO configured (one-click)")
             log.info('MainWindow', f"One-click MSO: type={self.state.test_type}, "
-                     f"hor={cp.hor_mode}/{cp.hor_scale:g}s/{cp.hor_pos}%, "
-                     f"trig={cp.trig_channel}/{cp.trig_edge}/{cp.trig_level:g}V, "
+                     f"hor={cp.hor_mode}/{self._fmt_scale(cp.hor_scale)}/{cp.hor_pos}%, "
+                     f"trig={cp.trig_channel}/{cp.trig_edge}/{self._fmt_level(cp.trig_level)}, "
                      f"ch_pos={cp.ch_pos}, ch_scale={cp.ch_scale}")
 
             # Auto-set labels after MSO configuration
