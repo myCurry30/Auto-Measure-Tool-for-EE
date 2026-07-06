@@ -121,7 +121,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='EE_Power_On_AutoTool',
+    name='EE_Power_On_AutoTool_V2.1.0',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
