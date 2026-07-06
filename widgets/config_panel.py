@@ -828,6 +828,11 @@ class ConfigPanel(QWidget):
             except Exception as e:
                 log.warning('ConfigPanel',
                     'Failed to apply saved config after type change: %s' % e)
+        # Apply MSO config for the new test type
+        if hasattr(self, '_loaded_config') and self._loaded_config:
+            mso_sc = self._loaded_config.get(self._mso_key(self.state.test_type))
+            if mso_sc:
+                self._apply_mso_config(mso_sc)
 
     def _on_signal_toggled(self, idx):
         """Enable/disable signal: gray spinboxes, clear name when disabled."""
@@ -934,8 +939,35 @@ class ConfigPanel(QWidget):
         t = test_type or 'sequence'
         return '%s|%s' % (sheet_name, t)
 
+    @staticmethod
+    def _mso_key(test_type):
+        """Key for MSO settings — shared across all sheets, per test type."""
+        return 'mso_%s' % (test_type or 'sequence')
+
+    def _gather_mso_config(self):
+        """Build a dict of MSO scope settings (per test type, not per sheet)."""
+        return {
+            "hor_mode": self.hor_mode,
+            "hor_scale": self.hor_scale,
+            "hor_pos": self.hor_pos,
+            "ch_pos": list(self.ch_pos),
+            "ch_scale": list(self.ch_scale),
+            "ch_label_x": list(self.ch_label_x),
+            "ch_label_y": list(self.ch_label_y),
+        }
+
+    def _apply_mso_config(self, sc):
+        """Apply MSO scope settings from a config dict."""
+        if "hor_mode" in sc: self.hor_mode = sc["hor_mode"]
+        if "hor_scale" in sc: self.hor_scale = sc["hor_scale"]
+        if "hor_pos" in sc: self.hor_pos = sc["hor_pos"]
+        if "ch_pos" in sc: self.ch_pos = list(sc["ch_pos"])
+        if "ch_scale" in sc: self.ch_scale = list(sc["ch_scale"])
+        if "ch_label_x" in sc: self.ch_label_x = list(sc["ch_label_x"])
+        if "ch_label_y" in sc: self.ch_label_y = list(sc["ch_label_y"])
+
     def _gather_sheet_config(self, sheet_name):
-        """Build a dict of all per-(sheet, type) settings."""
+        """Build a dict of all per-(sheet, type) settings (no MSO — MSO is type-level)."""
         return {
             "test_type": self.state.test_type,
             "init_row": self.init_row,
@@ -955,18 +987,10 @@ class ConfigPanel(QWidget):
             "seq_pic_col": self.seq_pic_col,
             "mono_p_pic_col": self.mono_p_pic_col,
             "mono_n_pic_col": self.mono_n_pic_col,
-            "ch_label_x": list(self.ch_label_x),
-            "ch_label_y": list(self.ch_label_y),
             "save_to_excel": self.save_to_excel_cb.isChecked(),
             "save_to_local": self.save_to_local_cb.isChecked(),
             "save_to_scope": self.save_to_scope_cb.isChecked(),
             "ch_label_naming": self.ch_label_naming_cb.isChecked(),
-            # MSO scope settings
-            "hor_mode": self.hor_mode,
-            "hor_scale": self.hor_scale,
-            "hor_pos": self.hor_pos,
-            "ch_pos": list(self.ch_pos),
-            "ch_scale": list(self.ch_scale),
         }
 
     def _apply_sheet_config(self, sheet_name):
@@ -1066,12 +1090,6 @@ class ConfigPanel(QWidget):
         if "mono_n_pic_col" in sc:
             self.mono_n_pic_col = sc["mono_n_pic_col"]
 
-        # Label position
-        if "ch_label_x" in sc:
-            self.ch_label_x = list(sc["ch_label_x"])
-        if "ch_label_y" in sc:
-            self.ch_label_y = list(sc["ch_label_y"])
-
         # Save checkboxes
         if "save_to_excel" in sc:
             self.save_to_excel_cb.setChecked(sc["save_to_excel"])
@@ -1081,18 +1099,6 @@ class ConfigPanel(QWidget):
             self.save_to_scope_cb.setChecked(sc["save_to_scope"])
         if "ch_label_naming" in sc:
             self.ch_label_naming_cb.setChecked(sc["ch_label_naming"])
-
-        # MSO scope settings
-        if "hor_mode" in sc:
-            self.hor_mode = sc["hor_mode"]
-        if "hor_scale" in sc:
-            self.hor_scale = sc["hor_scale"]
-        if "hor_pos" in sc:
-            self.hor_pos = sc["hor_pos"]
-        if "ch_pos" in sc:
-            self.ch_pos = list(sc["ch_pos"])
-        if "ch_scale" in sc:
-            self.ch_scale = list(sc["ch_scale"])
 
         # Re-read signals + sync CH labels after all coordinates are restored
         try:
@@ -1152,6 +1158,9 @@ class ConfigPanel(QWidget):
         if hasattr(self, '_connect_use_socket'):
             cfg["connect_use_socket"] = self._connect_use_socket
 
+        # MSO settings — per test type, not per sheet
+        cfg[self._mso_key(self.state.test_type)] = self._gather_mso_config()
+
         # Always include current sheet+type (in case it hasn't been remembered yet)
         current_sheet = self.state.sheet_name or "Sheet1"
         key = self._sheet_key(current_sheet, self.state.test_type)
@@ -1184,6 +1193,11 @@ class ConfigPanel(QWidget):
                 self.state.file_path = cfg["excel_path"]
             if cfg.get("pic_path") and os.path.isdir(cfg["pic_path"]):
                 self.state.pic_path = cfg["pic_path"]
+
+            # Apply MSO config for current test type
+            mso_sc = cfg.get(self._mso_key(self.state.test_type))
+            if mso_sc:
+                self._apply_mso_config(mso_sc)
 
             # Apply current sheet+type config immediately
             current_sheet = self.state.sheet_name
@@ -1220,6 +1234,8 @@ class ConfigPanel(QWidget):
             cfg["connect_port"] = self._connect_port
         if hasattr(self, '_connect_use_socket'):
             cfg["connect_use_socket"] = self._connect_use_socket
+        # MSO per test type
+        cfg[self._mso_key(self.state.test_type)] = self._gather_mso_config()
         # Current sheet
         current_sheet = self.state.sheet_name or "Sheet1"
         key = self._sheet_key(current_sheet, self.state.test_type)
@@ -1254,6 +1270,10 @@ class ConfigPanel(QWidget):
                 self._connect_port = cfg["connect_port"]
             if cfg.get("connect_use_socket", None) is not None:
                 self._connect_use_socket = cfg["connect_use_socket"]
+            # Apply MSO config for current test type
+            mso_sc = cfg.get(self._mso_key(self.state.test_type))
+            if mso_sc:
+                self._apply_mso_config(mso_sc)
             # Apply current sheet
             current_sheet = self.state.sheet_name
             if current_sheet:
