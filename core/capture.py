@@ -330,14 +330,14 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
             value_max = _maybe_query('MAX', '')
             value_min = _maybe_query('MIN', '')
 
-            # Rise / Fall time — queried regardless of direction
+            # Rise time → P direction only; Fall time → N direction only
             value_rise = ''
-            if 'RISE' in meas_map:
-                if rise_en:
-                    value_rise = _query_meas(meas_map['RISE'], 'RISE')
             value_fall = ''
-            if 'FALL' in meas_map:
-                if fall_en:
+            if flag_monotony_direction == 1:  # P
+                if rise_en and 'RISE' in meas_map:
+                    value_rise = _query_meas(meas_map['RISE'], 'RISE')
+            else:  # N
+                if fall_en and 'FALL' in meas_map:
                     value_fall = _query_meas(meas_map['FALL'], 'FALL')
 
             cols = mono_p_cols if flag_monotony_direction == 1 else mono_n_cols
@@ -348,10 +348,10 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                     (value_max, 'MAX', 2), (value_min, 'MIN', 3)]):
                 if en_flags[en_idx]:
                     xls.setCell(sheet_name, m, cols[col_idx], val)
-            # Rise / Fall time — separate columns
-            if rise_en and value_rise:
+            # Rise / Fall time — direction-specific
+            if flag_monotony_direction == 1 and rise_en and value_rise:
                 xls.setCell(sheet_name, m, rise_col, value_rise)
-            if fall_en and value_fall:
+            elif flag_monotony_direction == 0 and fall_en and value_fall:
                 xls.setCell(sheet_name, m, fall_col, value_fall)
         xls.save()
         _pulse()          # restore GUI BEFORE log output
