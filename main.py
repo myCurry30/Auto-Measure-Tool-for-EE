@@ -3,7 +3,10 @@ import sys
 import os
 
 # Add project root to path
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    PROJECT_ROOT = sys._MEIPASS
+else:
+    PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, PROJECT_ROOT)
 
 from PySide6.QtWidgets import QApplication
@@ -15,8 +18,14 @@ from app.main_window import MainWindow
 
 def main():
     """Main application entry point."""
+    # Windows taskbar icon: set AppUserModelID before QApplication
+    import ctypes
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Nettrix.EEPowerOnAutoTool")
+
     # Create application
     app = QApplication(sys.argv)
+    app.setApplicationName("EE Power On AutoTool")
+    app.setApplicationVersion("2.1.0")
 
     # Set application icon (title bar + taskbar)
     icon_path = os.path.join(PROJECT_ROOT, "resources", "app_icon.ico")
