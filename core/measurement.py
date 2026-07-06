@@ -101,24 +101,43 @@ def measure_sequence(osc, mso5,
         osc.measure(9, 'CH2', 'Minimum', 1)
 
 
-def measure_monotony(osc, mso5):
-    """Monotony measurement: Top/Base + Max/Min + RiseTime/FallTime on CH1.
+def measure_monotony(osc, mso5,
+                     rise_source='CH1', rise_ref_high=90, rise_ref_low=10,
+                     fall_source='CH1', fall_ref_high=90, fall_ref_low=10):
+    """Monotony measurement: Top/Base + Max/Min + RiseTime/FallTime.
 
     Args:
         osc: Oscilloscope instance
         mso5: True if MSO4/5/6 series
+        rise_source: source channel for Rise Time
+        rise_ref_high/low: reference levels for Rise Time
+        fall_source: source channel for Fall Time
+        fall_ref_high/low: reference levels for Fall Time
     """
     if mso5:
         osc.measure_1(1, 'CH1', 'Top')
         osc.measure_1(2, 'CH1', 'Base')
         osc.measure_1(3, 'CH1', 'MAXimum')
         osc.measure_1(4, 'CH1', 'Minimum')
-        osc.measure_1(5, 'CH1', 'RISETIME')
-        osc.measure_1(6, 'CH1', 'FALLTIME')
+        osc.measure_1(5, rise_source, 'RISETIME')
+        osc.measure_1(6, fall_source, 'FALLTIME')
+        # Set ref levels for rise/fall
+        for meas_num, ref_h, ref_l in [(5, rise_ref_high, rise_ref_low),
+                                        (6, fall_ref_high, fall_ref_low)]:
+            osc.write('MEASUrement:MEAS%d:REFLevels1:PERCent:TYPE CUSTom' % meas_num)
+            osc.write('MEASUrement:MEAS%d:REFLevels2:PERCent:TYPE CUSTom' % meas_num)
+            osc.write('MEASUrement:MEAS%d:REFLevels1:PERCent:RISEMid %d' % (meas_num, ref_h))
+            osc.write('MEASUrement:MEAS%d:REFLevels2:PERCent:RISEMid %d' % (meas_num, ref_l))
     else:
         osc.measure(1, 'CH1', 'Top', 1)
         osc.measure(2, 'CH1', 'Base', 1)
         osc.measure(3, 'CH1', 'MAXimum', 1)
         osc.measure(4, 'CH1', 'Minimum', 1)
-        osc.measure(5, 'CH1', 'RISETIME', 1)
-        osc.measure(6, 'CH1', 'FALLTIME', 1)
+        osc.measure(5, rise_source, 'RISETIME', 1)
+        osc.measure(6, fall_source, 'FALLTIME', 1)
+        for meas_num, ref_h, ref_l in [(5, rise_ref_high, rise_ref_low),
+                                        (6, fall_ref_high, fall_ref_low)]:
+            osc.write('MEASUrement:MEAS%d:REFLevels1:PERCent:TYPE CUSTom' % meas_num)
+            osc.write('MEASUrement:MEAS%d:REFLevels2:PERCent:TYPE CUSTom' % meas_num)
+            osc.write('MEASUrement:MEAS%d:REFLevels1:PERCent:RISEMid %d' % (meas_num, ref_h))
+            osc.write('MEASUrement:MEAS%d:REFLevels2:PERCent:RISEMid %d' % (meas_num, ref_l))

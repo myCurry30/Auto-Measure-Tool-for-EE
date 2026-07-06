@@ -155,6 +155,13 @@ class ConfigPanel(QWidget):
         self.fall_col = 2   # B
         self.rise_en = False
         self.fall_en = False
+        # Rise / Fall measurement config
+        self.rise_source = "CH1"
+        self.rise_ref_high = 90
+        self.rise_ref_low = 10
+        self.fall_source = "CH1"
+        self.fall_ref_high = 90
+        self.fall_ref_low = 10
         self.seq_pic_col = 9           # Sequence picture column (default I)
         self.mono_p_pic_col = 17       # Monotony P picture column (default Q)
         self.mono_n_pic_col = 18       # Monotony N picture column (default R)
@@ -774,6 +781,9 @@ class ConfigPanel(QWidget):
         # Rise / Fall time (Monotony only, default disabled)
         self.rise_col = 1; self.fall_col = 2
         self.rise_en = False; self.fall_en = False
+        self.rise_source = "CH1"; self.fall_source = "CH1"
+        self.rise_ref_high = 90; self.rise_ref_low = 10
+        self.fall_ref_high = 90; self.fall_ref_low = 10
         # Picture columns
         self.seq_pic_col = 9
         self.mono_p_pic_col = 17
@@ -1022,6 +1032,12 @@ class ConfigPanel(QWidget):
             "fall_col": self.fall_col,
             "rise_en": self.rise_en,
             "fall_en": self.fall_en,
+            "rise_source": self.rise_source,
+            "rise_ref_high": self.rise_ref_high,
+            "rise_ref_low": self.rise_ref_low,
+            "fall_source": self.fall_source,
+            "fall_ref_high": self.fall_ref_high,
+            "fall_ref_low": self.fall_ref_low,
             "seq_pic_col": self.seq_pic_col,
             "mono_p_pic_col": self.mono_p_pic_col,
             "mono_n_pic_col": self.mono_n_pic_col,
@@ -1125,6 +1141,12 @@ class ConfigPanel(QWidget):
             self.rise_en = sc["rise_en"]
         if "fall_en" in sc:
             self.fall_en = sc["fall_en"]
+        if "rise_source" in sc: self.rise_source = sc["rise_source"]
+        if "rise_ref_high" in sc: self.rise_ref_high = sc["rise_ref_high"]
+        if "rise_ref_low" in sc: self.rise_ref_low = sc["rise_ref_low"]
+        if "fall_source" in sc: self.fall_source = sc["fall_source"]
+        if "fall_ref_high" in sc: self.fall_ref_high = sc["fall_ref_high"]
+        if "fall_ref_low" in sc: self.fall_ref_low = sc["fall_ref_low"]
 
         # Picture columns (from Settings → Set Picture Columns)
         if "seq_pic_col" in sc:

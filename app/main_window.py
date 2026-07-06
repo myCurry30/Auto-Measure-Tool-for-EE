@@ -190,6 +190,10 @@ class MainWindow(QMainWindow):
         delay_action.setToolTip("Configure DELAY measurement parameters (Sequence only)")
         delay_action.triggered.connect(self._set_delay_config)
         settings_menu.addAction(delay_action)
+        risefall_action = QAction("Rise/Fall Time Config...", self)
+        risefall_action.setToolTip("Configure Rise Time / Fall Time parameters (Monotony only)")
+        risefall_action.triggered.connect(self._set_risefall_config)
+        settings_menu.addAction(risefall_action)
         settings_menu.addSeparator()
         hor_action = QAction("MSO Horizontal...", self)
         hor_action.setToolTip("Configure oscilloscope horizontal: mode, scale, position")
@@ -1172,6 +1176,54 @@ class MainWindow(QMainWindow):
             cp.delay_edge2 = edge2.currentText()
             cp.delay_ref_high = ref_high.value()
             cp.delay_ref_low = ref_low.value()
+    def _set_risefall_config(self):
+        """Settings → Rise/Fall Time Config: configure rise/fall measurement params."""
+        from PySide6.QtWidgets import (QDialog, QFormLayout, QComboBox,
+                                        QDialogButtonBox, QVBoxLayout, QSpinBox, QGroupBox)
+        cp = self.config_panel
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Rise/Fall Time Config (Monotony)")
+        lay = QVBoxLayout(dlg)
+
+        ch_options = ["CH1", "CH2", "CH3", "CH4"]
+
+        # ── Rise Time ──
+        rise_grp = QGroupBox("Rise Time")
+        rise_form = QFormLayout()
+        rise_src = QComboBox(); rise_src.addItems(ch_options); rise_src.setCurrentText(cp.rise_source)
+        rise_rh = QSpinBox(); rise_rh.setRange(1, 99); rise_rh.setValue(cp.rise_ref_high); rise_rh.setSuffix(" %")
+        rise_rl = QSpinBox(); rise_rl.setRange(1, 99); rise_rl.setValue(cp.rise_ref_low); rise_rl.setSuffix(" %")
+        rise_form.addRow("Source:", rise_src)
+        rise_form.addRow("Ref High:", rise_rh)
+        rise_form.addRow("Ref Low:", rise_rl)
+        rise_grp.setLayout(rise_form)
+        lay.addWidget(rise_grp)
+
+        # ── Fall Time ──
+        fall_grp = QGroupBox("Fall Time")
+        fall_form = QFormLayout()
+        fall_src = QComboBox(); fall_src.addItems(ch_options); fall_src.setCurrentText(cp.fall_source)
+        fall_rh = QSpinBox(); fall_rh.setRange(1, 99); fall_rh.setValue(cp.fall_ref_high); fall_rh.setSuffix(" %")
+        fall_rl = QSpinBox(); fall_rl.setRange(1, 99); fall_rl.setValue(cp.fall_ref_low); fall_rl.setSuffix(" %")
+        fall_form.addRow("Source:", fall_src)
+        fall_form.addRow("Ref High:", fall_rh)
+        fall_form.addRow("Ref Low:", fall_rl)
+        fall_grp.setLayout(fall_form)
+        lay.addWidget(fall_grp)
+
+        btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        btns.accepted.connect(dlg.accept)
+        btns.rejected.connect(dlg.reject)
+        lay.addWidget(btns)
+
+        if dlg.exec() == QDialog.Accepted:
+            cp.rise_source = rise_src.currentText()
+            cp.rise_ref_high = rise_rh.value(); cp.rise_ref_low = rise_rl.value()
+            cp.fall_source = fall_src.currentText()
+            cp.fall_ref_high = fall_rh.value(); cp.fall_ref_low = fall_rl.value()
+            log.info('MainWindow', f"Rise config: {cp.rise_source} {cp.rise_ref_high}%/{cp.rise_ref_low}%"
+                     f"  Fall config: {cp.fall_source} {cp.fall_ref_high}%/{cp.fall_ref_low}%")
+
             log.info('MainWindow', f"Delay config: {cp.delay_source1}→{cp.delay_source2} "
                      f"{cp.delay_edge1}/{cp.delay_edge2} {cp.delay_ref_high}%/{cp.delay_ref_low}%")
 
@@ -1413,7 +1465,11 @@ class MainWindow(QMainWindow):
 
             # Measurement (depends on test type)
             if is_monotony:
-                measurement.measure_monotony(osc, self.state.mso5)
+                measurement.measure_monotony(osc, self.state.mso5,
+                    rise_source=cp.rise_source,
+                    rise_ref_high=cp.rise_ref_high, rise_ref_low=cp.rise_ref_low,
+                    fall_source=cp.fall_source,
+                    fall_ref_high=cp.fall_ref_high, fall_ref_low=cp.fall_ref_low)
             else:  # sequence
                 measurement.measure_sequence(osc, self.state.mso5,
                     delay_src1=cp.delay_source1, delay_src2=cp.delay_source2,
