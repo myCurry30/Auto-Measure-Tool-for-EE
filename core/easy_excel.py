@@ -14,6 +14,11 @@ class EasyExcel:
 
         # 创建Excel应用
         self.xlApp = win32com.client.Dispatch('Excel.Application')
+        # 禁用图片自动压缩，防止截图质量下降
+        try:
+            self.xlApp.AutomaticCompression = False
+        except Exception:
+            pass
         if filename:
             self.filename = filename
             print(f"Opening Excel file: {filename}")
