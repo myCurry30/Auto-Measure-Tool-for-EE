@@ -1042,7 +1042,7 @@ class MainWindow(QMainWindow):
     def _set_mso_horizontal(self):
         """Settings → MSO Horizontal: dialog to configure scope horizontal parameters."""
         from PySide6.QtWidgets import (QDialog, QFormLayout, QComboBox,
-                                        QDialogButtonBox, QVBoxLayout, QDoubleSpinBox, QSpinBox)
+                                        QDialogButtonBox, QVBoxLayout, QDoubleSpinBox, QSpinBox, QHBoxLayout)
         cp = self.config_panel
         dlg = QDialog(self)
         dlg.setWindowTitle("MSO Horizontal Setup")
@@ -1054,12 +1054,32 @@ class MainWindow(QMainWindow):
         mode_combo.setCurrentText(cp.hor_mode)
         form.addRow("Mode:", mode_combo)
 
+        # Scale: value + unit combo, auto-converted
+        _SCALE_UNITS = [("ns", 1e-9), ("μs", 1e-6), ("ms", 1e-3), ("s", 1.0)]
+        scale_row = QHBoxLayout()
         scale_spin = QDoubleSpinBox()
-        scale_spin.setRange(0.000001, 100.0)
-        scale_spin.setDecimals(6)
-        scale_spin.setValue(cp.hor_scale)
-        scale_spin.setSuffix(" s/div")
-        form.addRow("Scale:", scale_spin)
+        scale_spin.setDecimals(3)
+        scale_spin.setRange(0.001, 99999.0)
+        unit_combo = QComboBox()
+        for label, _ in _SCALE_UNITS:
+            unit_combo.addItem(label)
+
+        # Convert saved seconds → display unit
+        raw = cp.hor_scale  # always in seconds
+        best_idx = 3  # default: seconds
+        best_val = raw
+        for i, (_, mult) in enumerate(_SCALE_UNITS):
+            v = raw / mult
+            if 1.0 <= v < 1000.0:
+                best_idx = i; best_val = v; break
+            elif v < 1.0 and mult <= raw * 1000:
+                best_idx = i; best_val = v
+        scale_spin.setValue(best_val)
+        unit_combo.setCurrentIndex(best_idx)
+
+        scale_row.addWidget(scale_spin)
+        scale_row.addWidget(unit_combo)
+        form.addRow("Scale:", scale_row)
 
         pos_spin = QSpinBox()
         pos_spin.setRange(0, 100)
@@ -1076,7 +1096,9 @@ class MainWindow(QMainWindow):
 
         def _apply():
             cp.hor_mode = mode_combo.currentText()
-            cp.hor_scale = scale_spin.value()
+            # Convert display value + unit → seconds
+            unit_mult = _SCALE_UNITS[unit_combo.currentIndex()][1]
+            cp.hor_scale = scale_spin.value() * unit_mult
             cp.hor_pos = pos_spin.value()
             if self.state.osc:
                 osc = self.state.osc
