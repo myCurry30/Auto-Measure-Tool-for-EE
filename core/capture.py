@@ -239,7 +239,7 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                 try:
                     source = osc.query('MEASUrement:MEAS5:SOUrce1?')
                     log.info('Capture', 'MEAS5 (DELAY) source=%s' % source)
-                    delay_time_raw = osc.query('MEASUrement:MEAS5:MAX?')
+                    delay_time_raw = osc.query('MEASUrement:MEAS5:MEAN?')
                 except Exception:
                     log.warning('Capture', 'No DELAY measurement (MEAS5) on scope')
                     delay_time_raw = None
@@ -313,7 +313,7 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
             type_to_idx = {'TOP': 0, 'BASE': 1, 'MAX': 2, 'MIN': 3}
 
             def _query_meas(meas_name, label):
-                raw = osc.query('MEASUrement:%s:MAX?' % meas_name)
+                raw = osc.query('MEASUrement:%s:MEAN?' % meas_name)
                 log.debug('Capture', 'Query Value_%s: %s' % (label, raw))
                 if raw.find('MEASUREMENT') != -1:
                     if mso5:
@@ -371,5 +371,9 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                    cols[1], value_base or '(none)',
                    cols[2], value_max or '(none)',
                    cols[3], value_min or '(none)'))
+            if flag_monotony_direction == 1 and rise_en and value_rise:
+                log.success('Capture', 'SaveData P: RISE TIME→col%d=%ss' % (rise_col, value_rise))
+            elif flag_monotony_direction == 0 and fall_en and value_fall:
+                log.success('Capture', 'SaveData N: FALL TIME→col%d=%ss' % (fall_col, value_fall))
 
     return delay_time, value_top, value_base, value_max, value_min
