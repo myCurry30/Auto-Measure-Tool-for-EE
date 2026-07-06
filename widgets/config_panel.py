@@ -36,7 +36,6 @@ class LogStream:
         self._stdout = sys.stdout
         self._stderr = sys.stderr
         # Create timestamped log file; keep max 20 logs
-        import sys
         if getattr(sys, 'frozen', False):
             base = os.path.dirname(sys.executable)
         else:
