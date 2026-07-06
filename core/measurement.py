@@ -56,19 +56,27 @@ def channel_Lable_set(osc, ch1_label, ch2_label, ch3_label, ch4_label="",
         osc.label('CH4', ch4_label, label_x[3], label_y[3])
 
 
-def measure_sequence(osc, mso5):
+def measure_sequence(osc, mso5,
+                     delay_src1='CH1', delay_src2='CH2',
+                     delay_edge1='RISE', delay_edge2='RISE',
+                     delay_ref_high=90, delay_ref_low=10):
     """Sequence measurement: RISE-edge delay (CH1→CH2, 90%/10%).
 
     Args:
         osc: Oscilloscope instance
         mso5: True if MSO4/5/6 series
+        delay_src1/2: delay measurement source channels
+        delay_edge1/2: RISE or FALL
+        delay_ref_high/low: reference level percentages
     """
     if mso5:
         osc.measure_1(1, 'CH1', 'Top')
         osc.measure_1(2, 'CH1', 'Base')
         osc.measure_1(3, 'CH2', 'Top')
         osc.measure_1(4, 'CH2', 'Base')
-        osc.measure_delay(5, 'CH1', 'CH2', 'DELAY', 'RISE', 'RISE', 90, 10, 'RISEMid')
+        osc.measure_delay(5, delay_src1, delay_src2, 'DELAY',
+                          delay_edge1, delay_edge2,
+                          delay_ref_high, delay_ref_low, 'RISEMid')
         osc.measure_1(6, 'CH1', 'MAXimum')
         osc.measure_1(7, 'CH1', 'Minimum')
         osc.measure_1(8, 'CH2', 'MAXimum')
@@ -78,15 +86,15 @@ def measure_sequence(osc, mso5):
         osc.measure(2, 'CH1', 'Base', 1)
         osc.measure(3, 'CH2', 'Top', 1)
         osc.measure(4, 'CH2', 'Base', 1)
-        osc.measure(5, 'CH1', 'DELAY', 1)
-        osc.measure(5, 'CH2', 'DELAY', 2)
-        osc.write('MEASUREMENT:MEAS%d:DELAY:EDGE %s' % (5, 'RISE'))
-        osc.write('MEASUREMENT:MEAS%d:TOEdge %s' % (5, 'RISE'))
+        osc.measure(5, delay_src1, 'DELAY', 1)
+        osc.measure(5, delay_src2, 'DELAY', 2)
+        osc.write('MEASUREMENT:MEAS%d:DELAY:EDGE %s' % (5, delay_edge1))
+        osc.write('MEASUREMENT:MEAS%d:TOEdge %s' % (5, delay_edge2))
         osc.write('MEASUrement:MEAS%d:GLOBalref 0' % (5))
         osc.write('MEASUrement:MEAS%d:REFLevels1:PERCent:TYPE CUSTom' % (5))
         osc.write('MEASUrement:MEAS%d:REFLevels2:PERCent:TYPE CUSTom' % (5))
-        osc.write('MEASUrement:MEAS%d:REFLevels1:PERCent:%s %d' % (5, 'RISEMid', 90))
-        osc.write('MEASUrement:MEAS%d:REFLevels2:PERCent:%s %d' % (5, 'RISEMid', 10))
+        osc.write('MEASUrement:MEAS%d:REFLevels1:PERCent:%s %d' % (5, 'RISEMid', delay_ref_high))
+        osc.write('MEASUrement:MEAS%d:REFLevels2:PERCent:%s %d' % (5, 'RISEMid', delay_ref_low))
         osc.measure(6, 'CH1', 'MAXimum', 1)
         osc.measure(7, 'CH1', 'Minimum', 1)
         osc.measure(8, 'CH2', 'MAXimum', 1)

@@ -159,6 +159,14 @@ class ConfigPanel(QWidget):
         self.mono_p_pic_col = 17       # Monotony P picture column (default Q)
         self.mono_n_pic_col = 18       # Monotony N picture column (default R)
 
+        # DELAY measurement config (Sequence only, per sheet+type)
+        self.delay_source1 = "CH1"
+        self.delay_source2 = "CH2"
+        self.delay_edge1 = "RISE"
+        self.delay_edge2 = "RISE"
+        self.delay_ref_high = 90
+        self.delay_ref_low = 10
+
         # MSO horizontal settings
         self.hor_mode = "AUTO"         # "AUTO" or "MANUAL"
         self.hor_scale = 0.01          # seconds/div
@@ -770,6 +778,10 @@ class ConfigPanel(QWidget):
         self.seq_pic_col = 9
         self.mono_p_pic_col = 17
         self.mono_n_pic_col = 18
+        # DELAY config (Sequence only)
+        self.delay_source1 = "CH1"; self.delay_source2 = "CH2"
+        self.delay_edge1 = "RISE"; self.delay_edge2 = "RISE"
+        self.delay_ref_high = 90; self.delay_ref_low = 10
         # MSO
         self.hor_mode = "AUTO"
         self.hor_scale = 0.01
@@ -1014,6 +1026,12 @@ class ConfigPanel(QWidget):
             "mono_p_pic_col": self.mono_p_pic_col,
             "mono_n_pic_col": self.mono_n_pic_col,
             "save_to_excel": self.save_to_excel_cb.isChecked(),
+            "delay_source1": self.delay_source1,
+            "delay_source2": self.delay_source2,
+            "delay_edge1": self.delay_edge1,
+            "delay_edge2": self.delay_edge2,
+            "delay_ref_high": self.delay_ref_high,
+            "delay_ref_low": self.delay_ref_low,
             "save_to_local": self.save_to_local_cb.isChecked(),
             "save_to_scope": self.save_to_scope_cb.isChecked(),
             "ch_label_naming": self.ch_label_naming_cb.isChecked(),
@@ -1125,6 +1143,13 @@ class ConfigPanel(QWidget):
             self.save_to_scope_cb.setChecked(sc["save_to_scope"])
         if "ch_label_naming" in sc:
             self.ch_label_naming_cb.setChecked(sc["ch_label_naming"])
+        # DELAY config (Sequence only)
+        if "delay_source1" in sc: self.delay_source1 = sc["delay_source1"]
+        if "delay_source2" in sc: self.delay_source2 = sc["delay_source2"]
+        if "delay_edge1" in sc: self.delay_edge1 = sc["delay_edge1"]
+        if "delay_edge2" in sc: self.delay_edge2 = sc["delay_edge2"]
+        if "delay_ref_high" in sc: self.delay_ref_high = sc["delay_ref_high"]
+        if "delay_ref_low" in sc: self.delay_ref_low = sc["delay_ref_low"]
 
         # Re-read signals + sync CH labels after all coordinates are restored
         try:

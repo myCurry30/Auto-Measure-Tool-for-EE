@@ -186,6 +186,11 @@ class MainWindow(QMainWindow):
         pic_col_action.triggered.connect(self._set_pic_cols)
         settings_menu.addAction(pic_col_action)
         settings_menu.addSeparator()
+        delay_action = QAction("Delay Config...", self)
+        delay_action.setToolTip("Configure DELAY measurement parameters (Sequence only)")
+        delay_action.triggered.connect(self._set_delay_config)
+        settings_menu.addAction(delay_action)
+        settings_menu.addSeparator()
         hor_action = QAction("MSO Horizontal...", self)
         hor_action.setToolTip("Configure oscilloscope horizontal: mode, scale, position")
         hor_action.triggered.connect(self._set_mso_horizontal)
@@ -1127,6 +1132,49 @@ class MainWindow(QMainWindow):
         if abs(v) >= 1: return f'{v:.3g}V'
         return f'{v*1e3:.3g}mV'
 
+    def _set_delay_config(self):
+        """Settings → Delay Config: configure DELAY measurement sources and edges."""
+        from PySide6.QtWidgets import (QDialog, QFormLayout, QComboBox,
+                                        QDialogButtonBox, QVBoxLayout, QSpinBox)
+        cp = self.config_panel
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Delay Config (Sequence)")
+        lay = QVBoxLayout(dlg)
+        form = QFormLayout()
+
+        ch_options = ["CH1", "CH2", "CH3", "CH4"]
+        edge_options = ["RISE", "FALL"]
+
+        src1 = QComboBox(); src1.addItems(ch_options); src1.setCurrentText(cp.delay_source1)
+        src2 = QComboBox(); src2.addItems(ch_options); src2.setCurrentText(cp.delay_source2)
+        edge1 = QComboBox(); edge1.addItems(edge_options); edge1.setCurrentText(cp.delay_edge1)
+        edge2 = QComboBox(); edge2.addItems(edge_options); edge2.setCurrentText(cp.delay_edge2)
+        ref_high = QSpinBox(); ref_high.setRange(1, 99); ref_high.setValue(cp.delay_ref_high); ref_high.setSuffix(" %")
+        ref_low = QSpinBox(); ref_low.setRange(1, 99); ref_low.setValue(cp.delay_ref_low); ref_low.setSuffix(" %")
+
+        form.addRow("Source 1:", src1)
+        form.addRow("Source 2:", src2)
+        form.addRow("Edge 1:", edge1)
+        form.addRow("Edge 2:", edge2)
+        form.addRow("Ref High:", ref_high)
+        form.addRow("Ref Low:", ref_low)
+
+        lay.addLayout(form)
+        btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        btns.accepted.connect(dlg.accept)
+        btns.rejected.connect(dlg.reject)
+        lay.addWidget(btns)
+
+        if dlg.exec() == QDialog.Accepted:
+            cp.delay_source1 = src1.currentText()
+            cp.delay_source2 = src2.currentText()
+            cp.delay_edge1 = edge1.currentText()
+            cp.delay_edge2 = edge2.currentText()
+            cp.delay_ref_high = ref_high.value()
+            cp.delay_ref_low = ref_low.value()
+            log.info('MainWindow', f"Delay config: {cp.delay_source1}→{cp.delay_source2} "
+                     f"{cp.delay_edge1}/{cp.delay_edge2} {cp.delay_ref_high}%/{cp.delay_ref_low}%")
+
     def _set_mso_horizontal(self):
         """Settings → MSO Horizontal: dialog to configure scope horizontal parameters."""
         from PySide6.QtWidgets import (QDialog, QFormLayout, QComboBox,
@@ -1367,7 +1415,10 @@ class MainWindow(QMainWindow):
             if is_monotony:
                 measurement.measure_monotony(osc, self.state.mso5)
             else:  # sequence
-                measurement.measure_sequence(osc, self.state.mso5)
+                measurement.measure_sequence(osc, self.state.mso5,
+                    delay_src1=cp.delay_source1, delay_src2=cp.delay_source2,
+                    delay_edge1=cp.delay_edge1, delay_edge2=cp.delay_edge2,
+                    delay_ref_high=cp.delay_ref_high, delay_ref_low=cp.delay_ref_low)
 
             # Horizontal
             osc.hormode(cp.hor_mode)
