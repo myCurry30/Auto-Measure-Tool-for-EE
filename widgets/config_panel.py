@@ -1223,6 +1223,16 @@ class ConfigPanel(QWidget):
             if cfg.get("pic_path") and os.path.isdir(cfg["pic_path"]):
                 self.state.pic_path = cfg["pic_path"]
 
+            # Apply connection info
+            if cfg.get("connect_method"):
+                self._connect_method = cfg["connect_method"]
+            if cfg.get("connect_ip"):
+                self._connect_ip = cfg["connect_ip"]
+            if cfg.get("connect_port"):
+                self._connect_port = cfg["connect_port"]
+            if cfg.get("connect_use_socket", None) is not None:
+                self._connect_use_socket = cfg["connect_use_socket"]
+
             # Apply MSO config for current test type
             mso_sc = cfg.get(self._mso_key(self.state.test_type))
             if mso_sc:
