@@ -739,10 +739,13 @@ class MainWindow(QMainWindow):
         lay.addWidget(btns)
 
         def _validate_and_accept():
-            # Only check enabled items for duplicates
+            # Only check enabled items for duplicates (incl. rise/fall time)
             p_en_vals = [s.value() for s, cb in zip(p_spins, p_cbs) if cb.isChecked()]
             n_en_vals = [s.value() for s, cb in zip(n_spins, n_cbs) if cb.isChecked()]
-            all_vals = p_en_vals + n_en_vals
+            extra_vals = []
+            if rise_cb.isChecked(): extra_vals.append(rise_spin.value())
+            if fall_cb.isChecked(): extra_vals.append(fall_spin.value())
+            all_vals = p_en_vals + n_en_vals + extra_vals
             seen = set()
             for v in all_vals:
                 if v in seen:
