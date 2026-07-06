@@ -48,6 +48,25 @@ class MainWindow(QMainWindow):
             self.state._file_path = saved['file_path']
             self.config_panel.excel_edit.setText(saved['file_path'])
 
+        # Auto-load config_default.json if present next to exe
+        import sys as _sys
+        if getattr(_sys, 'frozen', False):
+            self._default_config_path = os.path.join(os.path.dirname(_sys.executable), 'config_default.json')
+        else:
+            self._default_config_path = os.path.join(os.path.dirname(__file__), '..', 'config_default.json')
+        if os.path.exists(self._default_config_path):
+            self.config_panel._silent_import(self._default_config_path)
+            # Restore connection info from loaded config
+            cp = self.config_panel
+            if hasattr(cp, '_connect_method'):
+                self._last_connect_method = cp._connect_method
+            if hasattr(cp, '_connect_ip'):
+                self._last_ip = cp._connect_ip
+            if hasattr(cp, '_connect_port'):
+                self._last_port = cp._connect_port
+            if hasattr(cp, '_connect_use_socket'):
+                self._last_use_socket = cp._connect_use_socket
+
         # Auto-load config.json to restore last session state
         self._config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
         self._auto_load_config()
@@ -281,6 +300,16 @@ class MainWindow(QMainWindow):
         # Auto-export config to restore full state on next launch
         try:
             self.config_panel._silent_export(self._config_path)
+        except Exception:
+            pass
+        # Also save a default config next to the exe (for cross-machine template)
+        try:
+            import sys
+            if getattr(sys, 'frozen', False):
+                default_path = os.path.join(os.path.dirname(sys.executable), 'config_default.json')
+            else:
+                default_path = os.path.join(os.path.dirname(__file__), '..', 'config_default.json')
+            self.config_panel._silent_export(default_path)
         except Exception:
             pass
 
