@@ -58,6 +58,8 @@ class LogStream:
             if self.widget:
                 self._flush_buffer()
                 self.widget.appendPlainText(f"[{ts}] {clean}")
+                self.widget.verticalScrollBar().setValue(
+                    self.widget.verticalScrollBar().maximum())
             else:
                 self._buffer.append(f"[{ts}] {clean}")
         else:
@@ -69,6 +71,8 @@ class LogStream:
             for line in self._buffer:
                 self.widget.appendPlainText(line)
             self._buffer.clear()
+            self.widget.verticalScrollBar().setValue(
+                self.widget.verticalScrollBar().maximum())
 
     def flush(self):
         self._stdout.flush()
@@ -519,6 +523,8 @@ class ConfigPanel(QWidget):
         from datetime import datetime
         ts = datetime.now().strftime("%H:%M:%S")
         self.log_view.appendPlainText(f"[{ts}] {msg}")
+        self.log_view.verticalScrollBar().setValue(
+            self.log_view.verticalScrollBar().maximum())
 
     def cleanup(self):
         """Restore stdout/stderr before app exit."""
