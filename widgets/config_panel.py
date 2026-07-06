@@ -412,7 +412,7 @@ class ConfigPanel(QWidget):
         left_save = QVBoxLayout()
         left_save.setSpacing(4)
         self.save_to_excel_cb = QCheckBox("Save to Excel")
-        self.save_to_excel_cb.setChecked(True)
+        self.save_to_excel_cb.setChecked(False)
         self.save_to_excel_cb.toggled.connect(
             lambda en: self._on_save_to_excel_toggled(en))
         self.save_to_local_cb = QCheckBox("Save to Local")
@@ -420,7 +420,7 @@ class ConfigPanel(QWidget):
         self.save_to_local_cb.toggled.connect(
             lambda en: self._on_save_to_local_toggled(en))
         self.save_to_scope_cb = QCheckBox("Save to Scope")
-        self.save_to_scope_cb.setChecked(True)
+        self.save_to_scope_cb.setChecked(False)
         self.save_to_scope_cb.toggled.connect(
             lambda en: (self.project_edit.setEnabled(en),
                         self._on_save_to_scope_toggled(en)))
@@ -755,9 +755,9 @@ class ConfigPanel(QWidget):
         self.ch_label_x = [10, 10, 10, 10]
         self.ch_label_y = [40, 40, 40, 40]
         # Checkboxes
-        self.save_to_excel_cb.setChecked(True)
+        self.save_to_excel_cb.setChecked(False)
         self.save_to_local_cb.setChecked(True)
-        self.save_to_scope_cb.setChecked(True)
+        self.save_to_scope_cb.setChecked(False)
         # Clear loaded config so stale per-sheet settings don't apply
         self._loaded_config = None
         # Reset test-type-specific settings (signal_cols, init_row, signal_rows, …)
