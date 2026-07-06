@@ -1127,6 +1127,8 @@ class ConfigPanel(QWidget):
         Call this after data is successfully saved to a sheet, so that the sheet's
         config is accumulated and will be included in the next export.
         """
+        if self.ch_label_naming_cb.isChecked():
+            return  # CH Label Naming mode — don't record settings
         sheet = self.state.sheet_name
         if not sheet:
             return
@@ -1144,6 +1146,8 @@ class ConfigPanel(QWidget):
             self, "Export Config", "config.json", "JSON (*.json)")
         if not path:
             return
+        if self.ch_label_naming_cb.isChecked():
+            return  # CH Label Naming mode — don't export
 
         # Start from in-memory accumulated config, or load existing file
         cfg = {}
@@ -1231,6 +1235,8 @@ class ConfigPanel(QWidget):
 
     def _silent_export(self, path: str):
         """Export config to path without file dialog (for auto-save)."""
+        if self.ch_label_naming_cb.isChecked():
+            return  # CH Label Naming mode — don't auto-save
         cfg = {}
         if hasattr(self, '_loaded_config') and self._loaded_config:
             cfg = self._loaded_config
