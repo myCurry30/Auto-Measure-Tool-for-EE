@@ -150,7 +150,8 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                 data_col=7, mono_p_cols=None, mono_n_cols=None,
                 pic_cols=None, ch_enables=None,
                 seq_data_en=True, mono_p_data_en=None, mono_n_data_en=None,
-                use_ch_labels=False, ch_labels=None):
+                use_ch_labels=False, ch_labels=None,
+                rise_col=1, fall_col=2, rise_en=False, fall_en=False):
     """Capture screenshot, insert into Excel, and/or write measurements.
 
     Args:
@@ -276,7 +277,8 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
             meas_map = {}  # type_name → measurement_name
 
             for name, expected_type in [('MEAS1', 'TOP'), ('MEAS2', 'BASE'),
-                                         ('MEAS5', 'MAX'), ('MEAS6', 'MIN')]:
+                                         ('MEAS5', 'MAX'), ('MEAS6', 'MIN'),
+                                         ('MEAS10', 'RISE'), ('MEAS11', 'FALL')]:
                 try:
                     source = osc.query('MEASUrement:%s:SOUrce1?' % name)
                     source_upper = source.strip().upper() if source else ''
@@ -328,6 +330,16 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
             value_max = _maybe_query('MAX', '')
             value_min = _maybe_query('MIN', '')
 
+            # Rise / Fall time — queried regardless of direction
+            value_rise = ''
+            if 'RISE' in meas_map:
+                if rise_en:
+                    value_rise = _query_meas(meas_map['RISE'], 'RISE')
+            value_fall = ''
+            if 'FALL' in meas_map:
+                if fall_en:
+                    value_fall = _query_meas(meas_map['FALL'], 'FALL')
+
             cols = mono_p_cols if flag_monotony_direction == 1 else mono_n_cols
             dir_label = 'P' if flag_monotony_direction == 1 else 'N'
             # Only write enabled items to Excel
@@ -336,6 +348,11 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                     (value_max, 'MAX', 2), (value_min, 'MIN', 3)]):
                 if en_flags[en_idx]:
                     xls.setCell(sheet_name, m, cols[col_idx], val)
+            # Rise / Fall time — separate columns
+            if rise_en and value_rise:
+                xls.setCell(sheet_name, m, rise_col, value_rise)
+            if fall_en and value_fall:
+                xls.setCell(sheet_name, m, fall_col, value_fall)
         xls.save()
         _pulse()          # restore GUI BEFORE log output
 

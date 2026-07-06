@@ -715,6 +715,8 @@ class MainWindow(QMainWindow):
                                    cp.mono_p_cols, cp.mono_p_data_en):
             cb, sp = _row_with_enable(label, col, en, p_form)
             p_cbs.append(cb); p_spins.append(sp)
+        # Rise Time row (Monotony P)
+        rise_cb, rise_spin = _row_with_enable("RISE TIME", cp.rise_col, cp.rise_en, p_form)
         p_grp.setLayout(p_form)
         lay.addWidget(p_grp)
 
@@ -728,6 +730,8 @@ class MainWindow(QMainWindow):
                                    cp.mono_n_cols, cp.mono_n_data_en):
             cb, sp = _row_with_enable(label, col, en, n_form)
             n_cbs.append(cb); n_spins.append(sp)
+        # Fall Time row (Monotony N)
+        fall_cb, fall_spin = _row_with_enable("FALL TIME", cp.fall_col, cp.fall_en, n_form)
         n_grp.setLayout(n_form)
         lay.addWidget(n_grp)
 
@@ -759,12 +763,18 @@ class MainWindow(QMainWindow):
             cp.mono_p_cols = [s.value() for s in p_spins]
             cp.mono_n_data_en = [cb.isChecked() for cb in n_cbs]
             cp.mono_n_cols = [s.value() for s in n_spins]
+            cp.rise_en = rise_cb.isChecked()
+            cp.rise_col = rise_spin.value()
+            cp.fall_en = fall_cb.isChecked()
+            cp.fall_col = fall_spin.value()
             log.info('MainWindow', f"Data cols: seq={self._col_to_letter(cp.data_col)}"
                      f"({'ON' if cp.seq_data_en else 'OFF'}), "
                      f"monoP={[self._col_to_letter(c) for c in cp.mono_p_cols]}"
                      f"({['ON' if e else 'OFF' for e in cp.mono_p_data_en]}), "
                      f"monoN={[self._col_to_letter(c) for c in cp.mono_n_cols]}"
-                     f"({['ON' if e else 'OFF' for e in cp.mono_n_data_en]})")
+                     f"({['ON' if e else 'OFF' for e in cp.mono_n_data_en]}), "
+                     f"rise=col{self._col_to_letter(cp.rise_col)} {'ON' if cp.rise_en else 'OFF'}, "
+                     f"fall=col{self._col_to_letter(cp.fall_col)} {'ON' if cp.fall_en else 'OFF'}")
 
     def _set_pic_cols(self):
         """Open dialog to set picture insertion columns (Sequence + Monotony P/N)."""
@@ -923,6 +933,10 @@ class MainWindow(QMainWindow):
                 mono_n_data_en=list(self.config_panel.mono_n_data_en),
                 use_ch_labels=use_ch,
                 ch_labels=ch_labels,
+                rise_col=self.config_panel.rise_col,
+                fall_col=self.config_panel.fall_col,
+                rise_en=self.config_panel.rise_en,
+                fall_en=self.config_panel.fall_en,
             )
             parts = []
             if do_local:
@@ -966,6 +980,10 @@ class MainWindow(QMainWindow):
                 seq_data_en=self.config_panel.seq_data_en,
                 mono_p_data_en=list(self.config_panel.mono_p_data_en),
                 mono_n_data_en=list(self.config_panel.mono_n_data_en),
+                rise_col=self.config_panel.rise_col,
+                fall_col=self.config_panel.fall_col,
+                rise_en=self.config_panel.rise_en,
+                fall_en=self.config_panel.fall_en,
             )
             self.state.set_status("Data saved to Excel")
             self.config_panel.remember_current_sheet_config()
@@ -1002,6 +1020,10 @@ class MainWindow(QMainWindow):
                 seq_data_en=self.config_panel.seq_data_en,
                 mono_p_data_en=list(self.config_panel.mono_p_data_en),
                 mono_n_data_en=list(self.config_panel.mono_n_data_en),
+                rise_col=self.config_panel.rise_col,
+                fall_col=self.config_panel.fall_col,
+                rise_en=self.config_panel.rise_en,
+                fall_en=self.config_panel.fall_en,
             )
             self.state.set_status("Picture + Data saved")
             self.config_panel.remember_current_sheet_config()
