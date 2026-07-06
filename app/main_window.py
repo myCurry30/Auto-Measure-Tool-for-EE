@@ -47,6 +47,16 @@ class MainWindow(QMainWindow):
         if saved.get('file_path'):
             self.state._file_path = saved['file_path']
             self.config_panel.excel_edit.setText(saved['file_path'])
+
+        # Auto-load config.json to restore last session state
+        self._config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
+        self._auto_load_config()
+
+        # Initialize connection info on config panel (for export)
+        self.config_panel._connect_method = self._last_connect_method
+        self.config_panel._connect_ip = self._last_ip
+        self.config_panel._connect_port = self._last_port
+        self.config_panel._connect_use_socket = self._last_use_socket
         if saved.get('pic_path'):
             self.state.pic_path = saved['pic_path']
 
@@ -268,6 +278,28 @@ class MainWindow(QMainWindow):
                 json.dump(cfg, f, indent=2)
         except Exception as e:
             log.warning('MainWindow', f'Failed to save settings: {e}')
+        # Auto-export config to restore full state on next launch
+        try:
+            self.config_panel._silent_export(self._config_path)
+        except Exception:
+            pass
+
+    def _auto_load_config(self):
+        """Silently import config.json if it exists, to restore last session."""
+        if hasattr(self, '_config_path') and self.config_panel._silent_import(self._config_path):
+            # Restore connection info from loaded config
+            cp = self.config_panel
+            if hasattr(cp, '_connect_method'):
+                self._last_connect_method = cp._connect_method
+            if hasattr(cp, '_connect_ip'):
+                self._last_ip = cp._connect_ip
+            if hasattr(cp, '_connect_port'):
+                self._last_port = cp._connect_port
+            if hasattr(cp, '_connect_use_socket'):
+                self._last_use_socket = cp._connect_use_socket
+            # Update display
+            if self._last_ip:
+                self.conn_info_label.setText(f"IP: {self._last_ip}:{self._last_port}")
 
     def connect_signals(self):
         """Connect all signals between components and business logic."""
@@ -347,6 +379,12 @@ class MainWindow(QMainWindow):
 
                 self.state.set_connection(True)
                 self.state.set_status(message)
+
+                # Store connection info on config panel for export
+                self.config_panel._connect_method = params['method']
+                self.config_panel._connect_ip = params['ip_address']
+                self.config_panel._connect_port = params['port']
+                self.config_panel._connect_use_socket = params['use_socket']
 
                 # Start connection monitor (every 5 seconds)
                 self._connection_monitor_timer.start(5000)

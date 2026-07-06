@@ -1116,6 +1116,15 @@ class ConfigPanel(QWidget):
         cfg["project_name"] = self.state.project_name
         cfg["excel_path"] = self.state.file_path
         cfg["pic_path"] = self.state.pic_path
+        # Connection info (for session restore)
+        if hasattr(self, '_connect_method'):
+            cfg["connect_method"] = self._connect_method
+        if hasattr(self, '_connect_ip'):
+            cfg["connect_ip"] = self._connect_ip
+        if hasattr(self, '_connect_port'):
+            cfg["connect_port"] = self._connect_port
+        if hasattr(self, '_connect_use_socket'):
+            cfg["connect_use_socket"] = self._connect_use_socket
 
         # Always include current sheet+type (in case it hasn't been remembered yet)
         current_sheet = self.state.sheet_name or "Sheet1"
@@ -1165,3 +1174,67 @@ class ConfigPanel(QWidget):
 
         except Exception as e:
             log.debug('ConfigPanel', f'Error importing config: {e}')
+
+    def _silent_export(self, path: str):
+        """Export config to path without file dialog (for auto-save)."""
+        cfg = {}
+        if hasattr(self, '_loaded_config') and self._loaded_config:
+            cfg = self._loaded_config
+        if "sheets" not in cfg:
+            cfg["sheets"] = {}
+        # Global
+        cfg["project_name"] = self.state.project_name
+        cfg["excel_path"] = self.state.file_path
+        cfg["pic_path"] = self.state.pic_path
+        if hasattr(self, '_connect_method'):
+            cfg["connect_method"] = self._connect_method
+        if hasattr(self, '_connect_ip'):
+            cfg["connect_ip"] = self._connect_ip
+        if hasattr(self, '_connect_port'):
+            cfg["connect_port"] = self._connect_port
+        if hasattr(self, '_connect_use_socket'):
+            cfg["connect_use_socket"] = self._connect_use_socket
+        # Current sheet
+        current_sheet = self.state.sheet_name or "Sheet1"
+        key = self._sheet_key(current_sheet, self.state.test_type)
+        cfg["sheets"][key] = self._gather_sheet_config(current_sheet)
+        try:
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(cfg, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            log.debug('ConfigPanel', f'Auto-save config failed: {e}')
+
+    def _silent_import(self, path: str):
+        """Import config from path without file dialog (for auto-load)."""
+        if not os.path.exists(path):
+            return False
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                cfg = json.load(f)
+            self._loaded_config = cfg
+            self._config_file_path = path
+            if cfg.get("project_name"):
+                self.state.project_name = cfg["project_name"]
+            if cfg.get("excel_path"):
+                self.state.file_path = cfg["excel_path"]
+            if cfg.get("pic_path"):
+                self.state.pic_path = cfg["pic_path"]
+            # Restore connection info
+            if cfg.get("connect_method"):
+                self._connect_method = cfg["connect_method"]
+            if cfg.get("connect_ip"):
+                self._connect_ip = cfg["connect_ip"]
+            if cfg.get("connect_port"):
+                self._connect_port = cfg["connect_port"]
+            if cfg.get("connect_use_socket", None) is not None:
+                self._connect_use_socket = cfg["connect_use_socket"]
+            # Apply current sheet
+            current_sheet = self.state.sheet_name
+            if current_sheet:
+                self._apply_sheet_config(current_sheet)
+                self._on_test_type_changed(self.test_type_combo.currentText())
+            log.info('ConfigPanel', f'Auto-loaded config from {path}')
+            return True
+        except Exception as e:
+            log.debug('ConfigPanel', f'Auto-load config failed: {e}')
+            return False
