@@ -17,6 +17,11 @@ def _pulse():
     pass
 
 
+def _ascii_safe(s: str) -> str:
+    """Replace non-ASCII characters so the scope filesystem can handle the path."""
+    return s.encode('ascii', errors='replace').decode('ascii').replace('?', '_')
+
+
 def mkdir(path):
     """Create directory if it does not exist.
 
@@ -106,11 +111,11 @@ def savepic(osc, pic_path, sheet_name, signals, signal_enables,
     if save_to_scope:
         # User wants organised project dirs on scope
         if re.match(r'^[a-zA-Z]:[\\/]', project_name):
-            scope_base = project_name.rstrip('\\/')
+            scope_base = _ascii_safe(project_name.rstrip('\\/'))
         else:
-            scope_base = 'C:\\%s' % project_name
-        scope_dir = '%s\\%s' % (scope_base, sheet_name)
-        scope_path_no_ext = '%s\\%s' % (scope_dir, name)
+            scope_base = 'C:\\%s' % _ascii_safe(project_name)
+        scope_dir = '%s\\%s' % (scope_base, _ascii_safe(sheet_name))
+        scope_path_no_ext = '%s\\%s' % (scope_dir, _ascii_safe(name))
         osc.makeDir(scope_base)
         osc.makeDir(scope_dir)
     else:
