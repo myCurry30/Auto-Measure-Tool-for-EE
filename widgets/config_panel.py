@@ -462,12 +462,11 @@ class ConfigPanel(QWidget):
         left_save.addWidget(self.save_to_local_cb)
         left_save.addWidget(self.save_to_scope_cb)
 
-        # CH Label naming mode — no Excel, local only
-        self.ch_label_naming_cb = QCheckBox("Use CH Label Naming")
+        # Free picture save mode — no Excel, local only
+        self.ch_label_naming_cb = QCheckBox("自由保存 Free Save")
         self.ch_label_naming_cb.setToolTip(
-            "Save screenshot using CH label names instead of signal names.\n"
-            "No Excel required. Forces Save to Local only.\n"
-            "Multiple CHs: label1 TO label2.png  |  Single CH: label.png")
+            "使用 CH 标签命名截图，无需 Excel，仅保存到本地。\n"
+            "多 CH 启用: 标签1 TO 标签2.png  |  单 CH: 标签.png")
         self.ch_label_naming_cb.toggled.connect(self._on_ch_label_naming_toggled)
         left_save.addWidget(self.ch_label_naming_cb)
         left_save.addStretch()
@@ -916,7 +915,7 @@ class ConfigPanel(QWidget):
         log.info('ConfigPanel', 'Save to Scope: %s' % ('ON' if enabled else 'OFF'))
 
     def _on_ch_label_naming_toggled(self, enabled):
-        """CH Label naming mode: disable Excel/Scope, force Local on, disable Data."""
+        """自由保存图片模式: disable Excel/Scope, force Local on, disable Data."""
         log.info('ConfigPanel', 'CH Label Naming: %s' % ('ON' if enabled else 'OFF'))
         if enabled:
             # Save previous state so we can restore
