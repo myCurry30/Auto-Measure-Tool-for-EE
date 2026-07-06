@@ -463,7 +463,7 @@ class ConfigPanel(QWidget):
         left_save.addWidget(self.save_to_scope_cb)
 
         # Free picture save mode — no Excel, local only
-        self.ch_label_naming_cb = QCheckBox("自由保存 Free Save")
+        self.ch_label_naming_cb = QCheckBox("Free Save")
         self.ch_label_naming_cb.setToolTip(
             "使用 CH 标签命名截图，无需 Excel，仅保存到本地。\n"
             "多 CH 启用: 标签1 TO 标签2.png  |  单 CH: 标签.png")
