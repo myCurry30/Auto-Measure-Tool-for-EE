@@ -159,6 +159,11 @@ class ConfigPanel(QWidget):
         self.hor_scale = 0.01          # seconds/div
         self.hor_pos = 30              # percent
 
+        # Trigger settings
+        self.trig_channel = "CH1"      # CH1-CH4
+        self.trig_edge = "RISE"        # RISE / FALL / BOTH
+        self.trig_level = 0.5          # Volts
+
         # MSO channel position/scale (per channel)
         self.ch_pos = [-2.5, -3.5, -3.5, -3.5]
         self.ch_scale = [1.0, 1.0, 1.0, 1.0]
@@ -764,6 +769,9 @@ class ConfigPanel(QWidget):
         self.hor_mode = "AUTO"
         self.hor_scale = 0.01
         self.hor_pos = 30
+        self.trig_channel = "CH1"
+        self.trig_edge = "RISE"
+        self.trig_level = 0.5
         self.ch_pos = [-2.5, -3.5, -3.5, -3.5]
         self.ch_scale = [1.0, 1.0, 1.0, 1.0]
         self.ch_label_x = [10, 10, 10, 10]
@@ -950,6 +958,9 @@ class ConfigPanel(QWidget):
             "hor_mode": self.hor_mode,
             "hor_scale": self.hor_scale,
             "hor_pos": self.hor_pos,
+            "trig_channel": self.trig_channel,
+            "trig_edge": self.trig_edge,
+            "trig_level": self.trig_level,
             "ch_pos": list(self.ch_pos),
             "ch_scale": list(self.ch_scale),
             "ch_label_x": list(self.ch_label_x),
@@ -961,6 +972,9 @@ class ConfigPanel(QWidget):
         if "hor_mode" in sc: self.hor_mode = sc["hor_mode"]
         if "hor_scale" in sc: self.hor_scale = sc["hor_scale"]
         if "hor_pos" in sc: self.hor_pos = sc["hor_pos"]
+        if "trig_channel" in sc: self.trig_channel = sc["trig_channel"]
+        if "trig_edge" in sc: self.trig_edge = sc["trig_edge"]
+        if "trig_level" in sc: self.trig_level = sc["trig_level"]
         if "ch_pos" in sc: self.ch_pos = list(sc["ch_pos"])
         if "ch_scale" in sc: self.ch_scale = list(sc["ch_scale"])
         if "ch_label_x" in sc: self.ch_label_x = list(sc["ch_label_x"])

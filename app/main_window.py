@@ -1109,6 +1109,36 @@ class MainWindow(QMainWindow):
         pos_spin.setSuffix(" %")
         form.addRow("Position:", pos_spin)
 
+        # ── Trigger ──
+        trig_ch_combo = QComboBox()
+        trig_ch_combo.addItems(["CH1", "CH2", "CH3", "CH4"])
+        trig_ch_combo.setCurrentText(cp.trig_channel)
+        form.addRow("Trig Channel:", trig_ch_combo)
+
+        trig_edge_combo = QComboBox()
+        trig_edge_combo.addItems(["RISE", "FALL", "BOTH"])
+        trig_edge_combo.setCurrentText(cp.trig_edge)
+        form.addRow("Trig Edge:", trig_edge_combo)
+
+        _TRIG_LEVEL_UNITS = [("mV", 1e-3), ("V", 1.0)]
+        trig_level_row = QHBoxLayout()
+        trig_spin = QDoubleSpinBox()
+        trig_spin.setDecimals(0)
+        trig_spin.setRange(1, 99999)
+        trig_unit_combo = QComboBox()
+        for label, _ in _TRIG_LEVEL_UNITS:
+            trig_unit_combo.addItem(label)
+        raw_level = cp.trig_level
+        if raw_level < 1.0:
+            trig_spin.setValue(raw_level * 1000)
+            trig_unit_combo.setCurrentIndex(0)  # mV
+        else:
+            trig_spin.setValue(raw_level)
+            trig_unit_combo.setCurrentIndex(1)  # V
+        trig_level_row.addWidget(trig_spin)
+        trig_level_row.addWidget(trig_unit_combo)
+        form.addRow("Trig Level:", trig_level_row)
+
         lay.addLayout(form)
         btns = QDialogButtonBox(
             QDialogButtonBox.Apply | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -1118,17 +1148,23 @@ class MainWindow(QMainWindow):
 
         def _apply():
             cp.hor_mode = mode_combo.currentText()
-            # Convert display value + unit → seconds
             unit_mult = _SCALE_UNITS[unit_combo.currentIndex()][1]
             cp.hor_scale = scale_spin.value() * unit_mult
             cp.hor_pos = pos_spin.value()
+            cp.trig_channel = trig_ch_combo.currentText()
+            cp.trig_edge = trig_edge_combo.currentText()
+            trig_unit = _TRIG_LEVEL_UNITS[trig_unit_combo.currentIndex()][1]
+            cp.trig_level = trig_spin.value() * trig_unit
             if self.state.osc:
                 osc = self.state.osc
                 osc.hormode(cp.hor_mode)
                 osc.write(f'HORIZONTAL:MODE:SCALE {cp.hor_scale:g}')
                 osc.horpos(cp.hor_pos)
-                self.state.set_status(f"Horizontal: {cp.hor_mode} {cp.hor_scale:g}s/div {cp.hor_pos}%")
-            log.info('MainWindow', f"MSO HOR: mode={cp.hor_mode}, scale={cp.hor_scale:g}, pos={cp.hor_pos}")
+                osc.trigger('NORMAL', cp.trig_channel, cp.trig_edge, cp.trig_level)
+                self.state.set_status(f"Horizontal: {cp.hor_mode} {cp.hor_scale:g}s/div {cp.hor_pos}%"
+                    f" Trig:{cp.trig_channel} {cp.trig_edge} {cp.trig_level:g}V")
+            log.info('MainWindow', f"MSO HOR: mode={cp.hor_mode}, scale={cp.hor_scale:g}, pos={cp.hor_pos}"
+                f" trig={cp.trig_channel}/{cp.trig_edge}/{cp.trig_level:g}V")
 
         btns.button(QDialogButtonBox.Apply).clicked.connect(_apply)
         if dlg.exec() == QDialog.Accepted:
@@ -1272,10 +1308,14 @@ class MainWindow(QMainWindow):
             osc.write(f'HORIZONTAL:MODE:SCALE {cp.hor_scale:g}')
             osc.horpos(cp.hor_pos)
 
+            # Trigger
+            osc.trigger('NORMAL', cp.trig_channel, cp.trig_edge, cp.trig_level)
+
             osc.state('run')
             self.state.set_status("MSO configured (one-click)")
             log.info('MainWindow', f"One-click MSO: type={self.state.test_type}, "
                      f"hor={cp.hor_mode}/{cp.hor_scale:g}s/{cp.hor_pos}%, "
+                     f"trig={cp.trig_channel}/{cp.trig_edge}/{cp.trig_level:g}V, "
                      f"ch_pos={cp.ch_pos}, ch_scale={cp.ch_scale}")
 
             # Auto-set labels after MSO configuration
