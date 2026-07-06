@@ -848,7 +848,7 @@ class ConfigPanel(QWidget):
                 log.warning('ConfigPanel',
                     'Failed to apply saved config after type change: %s' % e)
         # Apply MSO config for the new test type
-        if hasattr(self, '_loaded_config') and self._loaded_config:
+        if hasattr(self, '_loaded_config') and self._loaded_config is not None:
             mso_sc = self._loaded_config.get(self._mso_key(self.state.test_type))
             if mso_sc:
                 self._apply_mso_config(mso_sc)
@@ -1162,7 +1162,7 @@ class ConfigPanel(QWidget):
 
         # Start from in-memory accumulated config, or load existing file
         cfg = {}
-        if hasattr(self, '_loaded_config') and self._loaded_config:
+        if hasattr(self, '_loaded_config') and self._loaded_config is not None:
             cfg = self._loaded_config
         elif os.path.exists(path):
             try:
@@ -1249,7 +1249,7 @@ class ConfigPanel(QWidget):
         if self.ch_label_naming_cb.isChecked():
             return  # CH Label Naming mode — don't auto-save
         cfg = {}
-        if hasattr(self, '_loaded_config') and self._loaded_config:
+        if hasattr(self, '_loaded_config') and self._loaded_config is not None:
             cfg = self._loaded_config
         if "sheets" not in cfg:
             cfg["sheets"] = {}
