@@ -141,6 +141,11 @@ class ConfigPanel(QWidget):
         self.seq_data_en = True
         self.mono_p_data_en = [True, True, True, True]
         self.mono_n_data_en = [True, True, True, True]
+        # Rise / Fall time (Monotony only, default disabled)
+        self.rise_col = 1   # A
+        self.fall_col = 2   # B
+        self.rise_en = False
+        self.fall_en = False
         self.seq_pic_col = 9           # Sequence picture column (default I)
         self.mono_p_pic_col = 17       # Monotony P picture column (default Q)
         self.mono_n_pic_col = 18       # Monotony N picture column (default R)
@@ -742,6 +747,9 @@ class ConfigPanel(QWidget):
         self.mono_p_data_en = [True, True, True, True]
         self.mono_n_cols = [13, 14, 15, 16]
         self.mono_n_data_en = [True, True, True, True]
+        # Rise / Fall time (Monotony only, default disabled)
+        self.rise_col = 1; self.fall_col = 2
+        self.rise_en = False; self.fall_en = False
         # Picture columns
         self.seq_pic_col = 9
         self.mono_p_pic_col = 17
@@ -934,6 +942,10 @@ class ConfigPanel(QWidget):
             "mono_p_data_en": list(self.mono_p_data_en),
             "mono_n_cols": list(self.mono_n_cols),
             "mono_n_data_en": list(self.mono_n_data_en),
+            "rise_col": self.rise_col,
+            "fall_col": self.fall_col,
+            "rise_en": self.rise_en,
+            "fall_en": self.fall_en,
             "seq_pic_col": self.seq_pic_col,
             "mono_p_pic_col": self.mono_p_pic_col,
             "mono_n_pic_col": self.mono_n_pic_col,
@@ -1031,6 +1043,14 @@ class ConfigPanel(QWidget):
             self.mono_n_cols = list(sc["mono_n_cols"])
         if "mono_n_data_en" in sc:
             self.mono_n_data_en = list(sc["mono_n_data_en"])
+        if "rise_col" in sc:
+            self.rise_col = sc["rise_col"]
+        if "fall_col" in sc:
+            self.fall_col = sc["fall_col"]
+        if "rise_en" in sc:
+            self.rise_en = sc["rise_en"]
+        if "fall_en" in sc:
+            self.fall_en = sc["fall_en"]
 
         # Picture columns (from Settings → Set Picture Columns)
         if "seq_pic_col" in sc:
