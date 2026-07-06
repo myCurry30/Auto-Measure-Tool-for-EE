@@ -41,10 +41,7 @@ datas = [
     # Qt Designer UI files
     (os.path.join(PROJECT_ROOT, 'layout.ui'), '.'),
     (os.path.join(PROJECT_ROOT, 'layout_new.ui'), '.'),
-    # Runtime config files
-    (os.path.join(PROJECT_ROOT, 'config.json'), '.'),
-    # User manual (embedded Help dialog)
-    (os.path.join(PROJECT_ROOT, 'Doc', '用户操作手册.md'), 'Doc'),
+    # No runtime config bundled — starts with defaults, auto-generates on first close
 ]
 
 # ── Hidden imports that PyInstaller may miss ──
