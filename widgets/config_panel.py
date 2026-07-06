@@ -790,6 +790,13 @@ class ConfigPanel(QWidget):
         """Update defaults when test type changes."""
         is_monotony = text == 'Monotony'
         log.info('ConfigPanel', f'Test type: {text}')
+        # Save MSO config for the OLD type before switching
+        old_type = self.state.test_type
+        if not hasattr(self, '_loaded_config') or self._loaded_config is None:
+            self._loaded_config = {}
+        if "sheets" not in self._loaded_config:
+            self._loaded_config["sheets"] = {}
+        self._loaded_config[self._mso_key(old_type)] = self._gather_mso_config()
         setattr(self.state, 'test_type', 'monotony' if is_monotony else 'sequence')
         self.pn_badge.setVisible(is_monotony)
         # Set defaults per type
