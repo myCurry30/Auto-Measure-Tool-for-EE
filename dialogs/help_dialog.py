@@ -512,6 +512,23 @@ liujch2
 
 适用于：多项目切换、配置备份、团队共享。
 
+> MSO 示波器设置（Horizontal、Channel Setup、Label Position、触发）按测试类型保存，不区分 Sheet。
+
+#### 5.5.1 Rise Time / Fall Time（Monotony 专属）
+
+Monotony 模式下可通过 Settings → Set Data Columns 单独启用：
+
+| 参数 | 位置 | 默认列 | 默认状态 |
+|------|------|--------|----------|
+| Rise Time | Monotony P 区域 | A | 不启用 |
+| Fall Time | Monotony N 区域 | B | 不启用 |
+
+启用后 P 方向自动保存 Rise Time，N 方向自动保存 Fall Time。测量值取自示波器 MEAN（平均值）。
+
+#### 5.5.2 自动保存/加载
+
+关闭时自动保存全部配置到 config.json，启动时自动恢复。
+
 ### 5.6 主题切换
 
 点击状态栏右侧的 **太阳/月亮** 按钮切换 Light/Dark 主题，或通过 **Settings 菜单** 选择。
@@ -531,8 +548,11 @@ liujch2
 | 参数 | 范围 | 说明 |
 |------|------|------|
 | Mode | AUTO / MANUAL | 水平扫描模式 |
-| Scale | 0.000001 – 100.0 s/div | 时基刻度 |
+| Scale | 1 – 99999 | 时基刻度，可选择 ns/μs/ms/s 单位 |
 | Position | 0 – 100 % | 水平位置百分比 |
+| Trig Channel | CH1 / CH2 / CH3 / CH4 | 触发信号源 |
+| Trig Edge | RISE / FALL / BOTH | 触发边沿类型 |
+| Trig Level | 1 – 99999 | 触发电平，可选择 mV/V 单位 |
 
 ### 6.2 MSO Channel Setup（通道设置）
 
