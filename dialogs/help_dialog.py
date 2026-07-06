@@ -525,9 +525,9 @@ Monotony 模式下可通过 Settings → Set Data Columns 单独启用：
 
 启用后 P 方向自动保存 Rise Time，N 方向自动保存 Fall Time。测量值取自示波器 MEAN（平均值）。
 
-#### 5.5.2 自动保存/加载
+#### 5.5.2 配置管理
 
-关闭时自动保存全部配置到 config.json，启动时自动恢复。
+关闭时自动保存全部配置到 config.json，启动时自动恢复。同时生成 config_default.json 在 exe 同级目录，复制到其他机器可自动导入。
 
 ### 5.6 主题切换
 
