@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
             self.conn_info_label.setText("GPIB/IP")
 
     def setup_ui(self):
-        self.setWindowTitle("硬件工程师自动化测试工具 V2.0 - Nettrix - liujch2")
+        self.setWindowTitle("硬件工程师自动化测试工具 V2.1 - liujch2")
         self.setMinimumSize(700, 400)
         self.resize(740, 460)
 

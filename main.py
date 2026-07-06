@@ -28,8 +28,8 @@ def main():
     window.show()
 
     print("=" * 50)
-    print("  硬件工程师自动化测试工具  V2.0")
-    print("  Nettrix  |  liujch2")
+    print("  硬件工程师自动化测试工具  V2.1")
+    print("  liujch2")
     print("=" * 50)
     print("  Scope: MSO4/5/6  DPO7000  DPO5000  (PyVISA)")
     print("  Test:  Sequence + Monotony (P/N toggle)")
