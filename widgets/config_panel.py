@@ -36,7 +36,12 @@ class LogStream:
         self._stdout = sys.stdout
         self._stderr = sys.stderr
         # Create timestamped log file; keep max 20 logs
-        log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'logs')
+        import sys
+        if getattr(sys, 'frozen', False):
+            base = os.path.dirname(sys.executable)
+        else:
+            base = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+        log_dir = os.path.join(base, 'logs')
         os.makedirs(log_dir, exist_ok=True)
         logs = sorted([f for f in os.listdir(log_dir) if f.startswith('log_')])
         while len(logs) >= 20:
