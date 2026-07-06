@@ -623,14 +623,16 @@ class MainWindow(QMainWindow):
         lay.addWidget(btns)
 
         def _validate_and_accept():
-            vals = [s.value() for s in spins]
+            # Only check enabled signals for duplicates
+            enabled_vals = [s.value() for i, s in enumerate(spins)
+                            if cp.signal_enables[i].isChecked()]
             seen = set()
-            for i, v in enumerate(vals):
+            for v in enabled_vals:
                 if v in seen:
                     QMessageBox.warning(dlg, "Duplicate Column",
-                        f"Signal {i+1}: column {self._col_to_letter(v)} "
-                        f"conflicts with another signal.\n\n"
-                        f"Each signal must have a unique column.")
+                        f"Column {self._col_to_letter(v)} "
+                        f"appears more than once among enabled signals.\n\n"
+                        f"Each enabled signal must have a unique column.")
                     return
                 seen.add(v)
             dlg.accept()
