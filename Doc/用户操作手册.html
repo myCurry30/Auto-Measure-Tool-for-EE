@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>用户操作手册</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">用户操作手册</h1>
+</header>
+<h1 id="ee-power-on-autotool-v2.1-用户操作手册">EE Power On AutoTool
+V2.1 — 用户操作手册</h1>
+<p>硬件工程师自动化测试工具 | 示波器 Sequence &amp; Monotony
+自动测量</p>
+<p>liujch2</p>
+<hr />
+<h2 id="目录">目录</h2>
+<ol type="1">
+<li><a href="#1-环境准备">环境准备</a></li>
+<li><a href="#2-程序安装">程序安装</a></li>
+<li><a href="#3-界面总览">界面总览</a></li>
+<li><a href="#4-操作流程">操作流程</a></li>
+<li><a href="#5-功能详解">功能详解</a></li>
+<li><a href="#6-配置参考">配置参考</a></li>
+<li><a href="#7-常见问题">常见问题</a></li>
+</ol>
+<hr />
+<h2 id="环境准备">1. 环境准备</h2>
+<h3 id="硬件需求">1.1 硬件需求</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>要求</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Windows 10 / 11（64 位）</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>建议 8GB 以上</td>
+</tr>
+<tr>
+<td>磁盘</td>
+<td>200MB 可用空间</td>
+</tr>
+<tr>
+<td>示波器</td>
+<td>Tektronix MSO4/5/6、DPO7000、DPO5000 系列</td>
+</tr>
+<tr>
+<td>连接线</td>
+<td>GPIB 线缆 / USB 线缆 / 网线（任选其一）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="软件依赖必须安装">1.2 软件依赖（必须安装）</h3>
+<p>目标设备需要以下两项系统级软件，PyInstaller 打包的 exe
+无法包含它们：</p>
+<h4 id="ni-visa-驱动连接示波器必需">NI-VISA 驱动（连接示波器必需）</h4>
+<p><strong>下载地址</strong>：https://www.ni.com/en/support/downloads/drivers/download.ni-visa.html</p>
+<p><strong>安装步骤</strong>： 1. 打开上述网址，搜索 “NI-VISA” 2.
+选择最新版本（当前约 2025 Q3） 3. 下载完整安装包（约 200–400 MB） 4.
+以<strong>管理员身份</strong>运行安装程序 5. 按默认选项完成安装 6.
+<strong>重启设备</strong>使驱动生效</p>
+<blockquote>
+<p>💡 <strong>备选方案</strong>：如果无法安装 NI-VISA，程序内置了
+pyvisa-py（纯 Python 后端），仅支持 TCPIP
+连接，部分示波器功能可能受限。</p>
+</blockquote>
+<h4 id="microsoft-excel读写-excel-必需">Microsoft Excel（读写 Excel
+必需）</h4>
+<p><strong>获取方式</strong>：</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>版本</th>
+<th>链接</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microsoft 365（推荐）</td>
+<td>https://www.microsoft.com/microsoft-365</td>
+<td>订阅制，持续更新</td>
+</tr>
+<tr>
+<td>Office 2021 买断版</td>
+<td>https://www.microsoft.com/microsoft-365/buy/compare-all-microsoft-365-products</td>
+<td>一次性购买</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 如果仅需要查看保存的截图文件，不需要在设备上操作
+Excel，可以跳过此项。</p>
+</blockquote>
+<h3 id="检查清单">1.3 检查清单</h3>
+<p>在开始使用前，逐项确认：</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />NI-VISA
+已安装并重启过设备</label></li>
+<li><label><input type="checkbox" />Microsoft Excel 已安装</label></li>
+<li><label><input type="checkbox" />示波器已开机并通过
+GPIB/USB/网线连接到电脑</label></li>
+<li><label><input type="checkbox" />已经准备好 Excel
+测试报告模板文件</label></li>
+</ul>
+<hr />
+<h2 id="程序安装">2. 程序安装</h2>
+<h3 id="从安装包安装推荐">2.1 从安装包安装（推荐）</h3>
+<ol type="1">
+<li>双击 <code>EE_Power_On_AutoTool_V2.1.0_Setup.exe</code></li>
+<li>点击 <strong>Next</strong>，阅读许可协议</li>
+<li>选择安装目录（默认
+<code>C:\Program Files\EE Power On AutoTool\</code>）</li>
+<li>点击 <strong>Install</strong>，等待完成</li>
+<li>桌面和开始菜单会自动创建快捷方式</li>
+</ol>
+<h3 id="绿色免安装版">2.2 绿色免安装版</h3>
+<p>直接复制 <code>EE_Power_On_AutoTool.exe</code>
+到目标设备，双击运行即可。无需安装，无需 Python。</p>
+<h3 id="卸载">2.3 卸载</h3>
+<ul>
+<li><strong>通过安装包安装的</strong>：开始菜单 → EE Power On AutoTool →
+Uninstall</li>
+<li><strong>绿色免安装版</strong>：直接删除 <code>.exe</code>
+文件即可</li>
+</ul>
+<blockquote>
+<p>卸载时会询问是否保留用户数据（<code>outputs/</code> 截图文件夹 和
+<code>logs/</code> 日志文件夹）。</p>
+</blockquote>
+<hr />
+<h2 id="界面总览">3. 界面总览</h2>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│  File  Settings                         🟢 IP: 10.31.133.149:4000 │
+│  📋  🔗  🔄  📂 Reload Excel                              │
+├──────────────────────────────────────────────────────────┤
+│  ┌─────────────────────┐  ┌──────────────────────────┐   │
+│  │  FILE PATHS         │  │  SETTINGS                │   │
+│  │  Excel: [______] 📂│  │  Sheet: [▼ Sheet1    ]   │   │
+│  │  Pic:   [______] 📂│  │  Type:  [▼ Sequence  ]   │   │
+│  │                     │  │  Init R: [21]            │   │
+│  │                     │  │  Signal1: [✓] R:[21] C:[4]│  │
+│  │                     │  │  Signal2: [ ] R:[21] C:[2]│  │
+│  │                     │  │  Signal3: [ ] R:[21] C:[2]│  │
+│  │                     │  │  Signal4: [ ] R:[21] C:[2]│  │
+│  └─────────────────────┘  └──────────────────────────┘   │
+│  ┌─────────────────────┐  ┌──────────────────────────┐   │
+│  │  MSO CHANNEL        │  │  ACTIONS                 │   │
+│  │  CH1: [✓] Pos:[_] V/div:[_] │  [ Set Label ]      │   │
+│  │  CH2: [ ] Pos:[_] V/div:[_] │  [ Set MSO  ]       │   │
+│  │  CH3: [ ] Pos:[_] V/div:[_] │  [💾 Save Pic ]     │   │
+│  │  CH4: [ ] Pos:[_] V/div:[_] │  [📊 Save Data]     │   │
+│  │                     │  [💾📊 Save Pic+Data]│   │
+│  │                     │  ┌────────────────────┐     │   │
+│  │                     │  │Save: [✓]Local [✓]Excel│  │   │
+│  │                     │  │      [ ]Scope          │  │   │
+│  │                     │  └────────────────────┘     │   │
+│  └─────────────────────┘  └──────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │  ◀ Last    Jump:[___] ▲▼    Next ▶              │   │
+│  └──────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │  [Log Output Area]                               │   │
+│  └──────────────────────────────────────────────────┘   │
+├──────────────────────────────────────────────────────────┤
+│  Ready                                          🌙     │
+└──────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="界面元素说明">界面元素说明</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>编号</th>
+<th>区域</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td>菜单栏</td>
+<td>File（保存/重新加载/导入导出配置）、Settings（各项参数配置）、主题切换</td>
+</tr>
+<tr>
+<td>②</td>
+<td>工具栏</td>
+<td>快捷按钮：保存Excel、连接、重连、重新加载Excel</td>
+</tr>
+<tr>
+<td>③</td>
+<td>连接指示灯</td>
+<td>🟢 绿色=已连接，⚪ 灰色=未连接</td>
+</tr>
+<tr>
+<td>④</td>
+<td>File Paths 卡片</td>
+<td>Excel 文件路径、截图保存路径</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td>Settings 卡片</td>
+<td>工作表选择、测试类型、起始行、信号行列配置</td>
+</tr>
+<tr>
+<td>⑥</td>
+<td>MSO Channel 卡片</td>
+<td>4通道使能、垂直位置、电压档位</td>
+</tr>
+<tr>
+<td>⑦</td>
+<td>Actions 卡片</td>
+<td>操作按钮：设置标签、一键配置示波器、保存截图/数据</td>
+</tr>
+<tr>
+<td>⑧</td>
+<td>导航栏</td>
+<td>上一项 / 下一项 / 跳转到指定行</td>
+</tr>
+<tr>
+<td>⑨</td>
+<td>日志区</td>
+<td>实时显示操作日志和错误信息</td>
+</tr>
+<tr>
+<td>⑩</td>
+<td>状态栏</td>
+<td>当前状态信息 + 深浅主题切换按钮</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="操作流程">4. 操作流程</h2>
+<h3 id="典型工作流程">4.1 典型工作流程</h3>
+<pre><code>┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│ 连接示波器 │ → │ 加载Excel │ → │ 选择工作表 │ → │ 配置参数  │ → │ 逐项测试  │
+└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘</code></pre>
+<h3 id="分步操作">4.2 分步操作</h3>
+<h4 id="步骤-1连接示波器">步骤 1：连接示波器</h4>
+<ol type="1">
+<li><p>点击工具栏 <strong>🔗 连接</strong> 按钮</p></li>
+<li><p>在弹窗中选择连接方式：</p>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 27%" />
+<col style="width: 45%" />
+</colgroup>
+<thead>
+<tr>
+<th>方式</th>
+<th>说明</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GPIB / USB（自动检测）</strong></td>
+<td>自动扫描所有 VISA 资源</td>
+<td>使用 GPIB 线缆或 USB 直连</td>
+</tr>
+<tr>
+<td><strong>Ethernet / IP（手动）</strong></td>
+<td>输入 IP 地址和端口</td>
+<td>通过网络远程连接</td>
+</tr>
+</tbody>
+</table></li>
+<li><p>如果选择 IP 连接，输入示波器的 IP 地址和端口号（默认
+4000）</p></li>
+<li><p>点击 <strong>OK</strong>，等待连接建立</p></li>
+<li><p>成功后在工具栏右上角看到 <strong>🟢 绿色圆点</strong> 和 IP
+信息</p></li>
+</ol>
+<h4 id="步骤-2加载-excel-测试报告">步骤 2：加载 Excel 测试报告</h4>
+<ol type="1">
+<li>在 <strong>File Paths</strong> 卡片中，点击 Excel 行右侧的
+<strong>📂 浏览</strong> 按钮</li>
+<li>选择项目的 Excel 测试报告文件（<code>.xlsx</code> 格式）</li>
+<li>同样点击 Pic 行的 <strong>📂 浏览</strong>，选择截图保存文件夹</li>
+</ol>
+<h4 id="步骤-3选择工作表和配置">步骤 3：选择工作表和配置</h4>
+<ol type="1">
+<li><p>在 <strong>Settings</strong> 卡片中，从 <strong>Sheet</strong>
+下拉列表选择当前要测试的工作表</p></li>
+<li><p>选择 <strong>Type</strong> 测试类型：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>用途</th>
+<th>测量项</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sequence</strong></td>
+<td>时序测量</td>
+<td>CH1→CH2 上升沿延时（90%/10%）</td>
+</tr>
+<tr>
+<td><strong>Monotony</strong></td>
+<td>单调性测量</td>
+<td>每通道 TOP/BASE/MAX/MIN（支持 P/N 翻转）</td>
+</tr>
+</tbody>
+</table></li>
+<li><p>设置 <strong>Init R</strong>
+起始行号（测试数据从该行开始）</p></li>
+<li><p>勾选需要测试的信号通道，设置每通道的 Excel
+行号（R:）和列号（C:）</p></li>
+</ol>
+<h4 id="步骤-4配置示波器参数">步骤 4：配置示波器参数</h4>
+<ol type="1">
+<li>在 <strong>MSO Channel</strong>
+卡片中勾选需要启用的通道（CH1–CH4）</li>
+<li>设置每通道的垂直位置（Pos）和电压灵敏度（V/div）</li>
+<li>通过菜单 <strong>Settings → MSO Horizontal</strong>
+设置水平时基</li>
+<li>通过菜单 <strong>Settings → Set Label Position</strong>
+设置通道标签位置</li>
+</ol>
+<h4 id="步骤-5执行测试">步骤 5：执行测试</h4>
+<ol type="1">
+<li><p>点击 <strong>Set MSO</strong>
+按钮一键配置示波器（自动设置测量项、通道、触发等）</p></li>
+<li><p>点击 <strong>Set Label</strong> 设置通道标签</p></li>
+<li><p>根据需要点击操作按钮：</p>
+<table>
+<thead>
+<tr>
+<th>按钮</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>💾 Save Pic</strong></td>
+<td>仅保存截图（可选：存本地/插入Excel/存示波器）</td>
+</tr>
+<tr>
+<td><strong>📊 Save Data</strong></td>
+<td>仅保存测量数据到 Excel</td>
+</tr>
+<tr>
+<td><strong>💾📊 Save Pic+Data</strong></td>
+<td>同时保存截图和数据</td>
+</tr>
+</tbody>
+</table></li>
+<li><p>使用 <strong>◀ Last</strong> / <strong>Next ▶</strong>
+导航到上一个/下一个测试项</p></li>
+<li><p>或使用 Jump 输入框直接跳转到指定行号</p></li>
+</ol>
+<hr />
+<h2 id="功能详解">5. 功能详解</h2>
+<h3 id="连接管理">5.1 连接管理</h3>
+<p>程序支持以下示波器型号，连接后自动识别：</p>
+<table>
+<thead>
+<tr>
+<th>系列</th>
+<th>型号举例</th>
+<th>识别方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MSO4/5/6</td>
+<td>MSO44, MSO54, MSO64</td>
+<td>查询 <code>*IDN?</code> 返回含 “MSO”</td>
+</tr>
+<tr>
+<td>DPO7000</td>
+<td>DPO7104C, DPO7254C</td>
+<td>查询 <code>*IDN?</code> 返回含 “DPO7000”</td>
+</tr>
+<tr>
+<td>DPO5000</td>
+<td>DPO5104B</td>
+<td>查询 <code>*IDN?</code> 返回含 “DPO5000”</td>
+</tr>
+</tbody>
+</table>
+<p><strong>断线重连</strong>：程序每 5 秒自动检测连接状态。连续 2
+次检测失败后弹出断线提示，点击 <strong>🔄 重连</strong> 即可恢复。</p>
+<h3 id="测试类型详解">5.2 测试类型详解</h3>
+<h4 id="sequence时序测量">Sequence（时序测量）</h4>
+<p>测量两通道间信号的时序关系： - CH1 TOP/BASE（90%/10% 参考电平） - CH2
+TOP/BASE - CH1→CH2 RISE-RISE 延时 - CH1/CH2 MAX/MIN</p>
+<h4 id="monotony单调性测量">Monotony（单调性测量）</h4>
+<p>每个启用的通道测量 4 个参数： - TOP（顶端值） - BASE（底端值） -
+MAX（最大值） - MIN（最小值）</p>
+<p>支持 P/N 方向翻转：同一行数据在 P（上升沿触发）和
+N（下降沿触发）之间切换。</p>
+<h3 id="导航系统">5.3 导航系统</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>Sequence 行为</th>
+<th>Monotony 行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Next ▶</strong></td>
+<td>行号 +1</td>
+<td>P→N（同行翻转）→ 行号 +1 → P</td>
+</tr>
+<tr>
+<td><strong>◀ Last</strong></td>
+<td>行号 -1</td>
+<td>N→P（同行翻转）→ 行号 -1 → N</td>
+</tr>
+<tr>
+<td><strong>Jump</strong></td>
+<td>直接跳到指定行</td>
+<td>跳到指定行，方向置为 P</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>键盘快捷操作：在 Jump 输入框按 <strong>↑/↓</strong>
+方向键可微调行号（+1/-1）。</p>
+</blockquote>
+<h3 id="保存选项">5.4 保存选项</h3>
+<p>截图和数据可以分别选择保存目标：</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>☑ <strong>Local</strong></td>
+<td>保存截图到本地文件夹（Pic 路径）</td>
+</tr>
+<tr>
+<td>☑ <strong>Excel</strong></td>
+<td>将截图插入 Excel 指定列，数据写入指定列</td>
+</tr>
+<tr>
+<td>☐ <strong>Scope</strong></td>
+<td>将截图保存到示波器内部存储</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Excel 列号配置：通过菜单 <strong>Settings → Set Data Columns</strong>
+和 <strong>Settings → Set Picture Columns</strong>
+分别设置数据和图片的写入列。</p>
+</blockquote>
+<h4 id="ch-label-naming-模式按通道标签命名截图">5.4.1 CH Label Naming
+模式（按通道标签命名截图）</h4>
+<p>勾选 Actions 卡片中的 <strong>Use CH Label Naming</strong>
+复选框后：</p>
+<table>
+<thead>
+<tr>
+<th>自动行为</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Save to Excel</td>
+<td>自动关闭</td>
+</tr>
+<tr>
+<td>Save to Scope</td>
+<td>自动关闭</td>
+</tr>
+<tr>
+<td>Save to Local</td>
+<td>强制打开</td>
+</tr>
+<tr>
+<td>Save Data 按钮</td>
+<td>禁用</td>
+</tr>
+<tr>
+<td>Save Pic+Data 按钮</td>
+<td>禁用</td>
+</tr>
+</tbody>
+</table>
+<p><strong>截图命名规则</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>测试类型</th>
+<th>命名格式</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sequence / CH 标签模式</td>
+<td><code>标签1 TO 标签2.PNG</code></td>
+<td><code>VCCIN TO VCCIO.PNG</code></td>
+</tr>
+<tr>
+<td>仅单个 CH 启用</td>
+<td><code>标签.PNG</code></td>
+<td><code>VCCIN.PNG</code></td>
+</tr>
+<tr>
+<td>Monotony P 方向</td>
+<td><code>标签_R.PNG</code></td>
+<td><code>VCCIN_R.PNG</code></td>
+</tr>
+<tr>
+<td>Monotony N 方向</td>
+<td><code>标签_F.PNG</code></td>
+<td><code>VCCIN_F.PNG</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>保存路径</strong>：直接保存在 Pic 路径下，不含 Sheet
+子目录。</p>
+<blockquote>
+<p>此模式不需要加载 Excel 文件，适用于仅需截图、不需要写入 Excel
+的场景。</p>
+</blockquote>
+<h3 id="配置导入导出">5.5 配置导入/导出</h3>
+<ul>
+<li><strong>File → Export
+Config</strong>：将当前所有设置（通道、行列、示波器参数等）导出为 JSON
+文件</li>
+<li><strong>File → Import Config</strong>：从 JSON 文件恢复设置</li>
+</ul>
+<p>适用于：多项目切换、配置备份、团队共享。</p>
+<blockquote>
+<p>MSO 示波器设置（Horizontal、Channel Setup、Label
+Position、触发）按测试类型保存，不区分 Sheet。其余设置按 Sheet + Type
+保存。</p>
+</blockquote>
+<h4 id="rise-time-fall-timemonotony-专属">5.5.1 Rise Time / Fall
+Time（Monotony 专属）</h4>
+<p>Monotony 模式下可通过 Settings → Set Data Columns 单独启用：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>位置</th>
+<th>默认列</th>
+<th>默认状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rise Time</td>
+<td>Monotony P 区域</td>
+<td>A</td>
+<td>不启用</td>
+</tr>
+<tr>
+<td>Fall Time</td>
+<td>Monotony N 区域</td>
+<td>B</td>
+<td>不启用</td>
+</tr>
+</tbody>
+</table>
+<p>启用后 P 方向自动保存 Rise Time，N 方向自动保存 Fall
+Time。测量值取自示波器 MEAN（平均值）。</p>
+<h3 id="配置管理">5.6 配置管理</h3>
+<ul>
+<li><strong>关闭时自动保存</strong>：所有配置（信号、数据列、MSO
+参数、连接信息等）关闭时自动写入 <code>config.json</code></li>
+<li><strong>启动时自动加载</strong>：重新打开程序后恢复上次全部配置</li>
+<li><strong>手动操作</strong>：File → Export Config / Import Config</li>
+<li><strong>默认配置文件</strong>：关闭时同时生成
+<code>config_default.json</code>（在 exe
+同级目录）。将默认配置模板文件复制到 exe
+旁，启动后自动导入全部设置和连接信息（IP、端口、连接方式）</li>
+<li>导入配置文件后工具栏自动更新连接信息显示</li>
+</ul>
+<h3 id="主题切换">5.7 主题切换</h3>
+<p>点击状态栏右侧的 <strong>🌙/☀️</strong> 按钮切换 Light/Dark
+主题，或通过 <strong>Settings 菜单</strong> 选择。</p>
+<h3 id="日志系统">5.8 日志系统</h3>
+<ul>
+<li>所有操作实时显示在底部日志区域</li>
+<li>日志自动保存到 <code>logs/</code>
+文件夹（<code>log_YYYYMMDD_HHMMSS.txt</code>）</li>
+<li>自动保留最近 20 个日志文件，超出自动删除</li>
+</ul>
+<hr />
+<h2 id="配置参考">6. 配置参考</h2>
+<h3 id="mso-horizontal水平时基-触发">6.1 MSO Horizontal（水平时基 +
+触发）</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>范围</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mode</td>
+<td>AUTO / MANUAL</td>
+<td>水平扫描模式</td>
+</tr>
+<tr>
+<td>Scale</td>
+<td>1 – 99999</td>
+<td>时基刻度，可选择 ns/μs/ms/s 单位</td>
+</tr>
+<tr>
+<td>Position</td>
+<td>0 – 100 %</td>
+<td>水平位置百分比</td>
+</tr>
+<tr>
+<td>Trig Channel</td>
+<td>CH1 / CH2 / CH3 / CH4</td>
+<td>触发信号源</td>
+</tr>
+<tr>
+<td>Trig Edge</td>
+<td>RISE / FALL / BOTH</td>
+<td>触发边沿类型</td>
+</tr>
+<tr>
+<td>Trig Level</td>
+<td>1 – 99999</td>
+<td>触发电平，可选择 mV/V 单位</td>
+</tr>
+</tbody>
+</table>
+<h3 id="mso-channel-setup通道设置">6.2 MSO Channel
+Setup（通道设置）</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>范围</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Position</td>
+<td>-20.0 – 20.0 div</td>
+<td>垂直位置</td>
+</tr>
+<tr>
+<td>Scale</td>
+<td>0.001 – 100.0 V/div</td>
+<td>电压灵敏度</td>
+</tr>
+</tbody>
+</table>
+<h3 id="label-position标签位置">6.3 Label Position（标签位置）</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>范围</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>0 – 999</td>
+<td>标签水平位置</td>
+</tr>
+<tr>
+<td>Y</td>
+<td>0 – 9999</td>
+<td>标签垂直位置</td>
+</tr>
+</tbody>
+</table>
+<h3 id="excel-列配置">6.4 Excel 列配置</h3>
+<p>所有列号范围为 1–99，对应 Excel 的 A–CU 列。</p>
+<hr />
+<h2 id="常见问题">7. 常见问题</h2>
+<h3 id="连接不到示波器">连接不到示波器</h3>
+<p><strong>GPIB/USB 模式</strong>： 1. 确认 NI-VISA 驱动已安装并重启 2.
+检查线缆物理连接是否牢固 3. 检查示波器是否已开机 4. 打开 NI
+MAX（Measurement &amp; Automation Explorer）确认设备可见</p>
+<p><strong>IP 模式</strong>： 1. 确认电脑和示波器在同一网络 2. 用
+<code>ping &lt;示波器IP&gt;</code> 测试网络连通性 3.
+确认防火墙未阻止端口（默认 4000） 4. 如直连失败，勾选 “Use Socket” 尝试
+Socket 模式</p>
+<h3 id="excel-进程残留">Excel 进程残留</h3>
+<p>如果程序关闭后任务管理器仍有 EXCEL.EXE 运行： 1.
+打开任务管理器（Ctrl+Shift+Esc） 2. 找到 EXCEL.EXE 进程 3. 右键 →
+结束任务</p>
+<p>程序已经做了 COM 对象释放处理，此问题通常只在异常退出时出现。</p>
+<h3 id="打包后运行闪退">打包后运行闪退</h3>
+<ol type="1">
+<li>确认目标设备已安装 NI-VISA 驱动</li>
+<li>检查 <code>logs/</code> 文件夹查看错误日志</li>
+<li>确认不是杀毒软件拦截（PyInstaller 打包可能被误报）</li>
+</ol>
+<h3 id="截图未插入-excel">截图未插入 Excel</h3>
+<ol type="1">
+<li>确认 Excel 文件已打开且工作表正确</li>
+<li>确认 Save 选项中的 “Excel” 已勾选</li>
+<li>检查 Picture Columns 设置中的列号是否正确</li>
+<li>确认该列未被合并单元格阻挡</li>
+</ol>
+<h3 id="工作表格式要求">工作表格式要求</h3>
+<p>Excel 测试报告建议格式： - 信号名称所在列按 Settings 中配置的 C: 列号
+- 每行一个测试项，行号从 Init R 开始 - Monotony 模式需要 P/N
+两个方向的独立数据列</p>
+<hr />
+<blockquote>
+<p>📧 技术支持：liujch2</p>
+<p>📄 版本：V2.1.0 | 2026年7月</p>
+</blockquote>
+</body>
+</html>
