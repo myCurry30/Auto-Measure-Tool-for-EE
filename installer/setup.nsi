@@ -1,16 +1,16 @@
 ﻿Unicode true
 ; ═══════════════════════════════════════════════════════════════════════════════
-; NSIS Installer Script — EE Power On AutoTool V2.2.1
+; NSIS Installer Script — EE Power On AutoTool V2.2.2
 ;
 ; Prerequisites:
 ;   - NSIS 3.x  (https://nsis.sourceforge.io/Download)
-;   - PyInstaller output: dist\EE_Power_On_AutoTool_V2.2.1.exe
+;   - PyInstaller output: dist\EE_Power_On_AutoTool_V2.2.2.exe
 ;
 ; Build:
 ;   makensis installer\setup.nsi
 ;
 ; Output:
-;   installer\EE_Power_On_AutoTool_V2.2.1_Setup.exe
+;   installer\EE_Power_On_AutoTool_V2.2.2_Setup.exe
 ; ═══════════════════════════════════════════════════════════════════════════════
 
 ; ── Includes ─────────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@
 
 ; ── General ──────────────────────────────────────────────────────────────────
 !define PRODUCT_NAME           "EE Power On AutoTool"
-!define PRODUCT_VERSION        "2.2.1"
+!define PRODUCT_VERSION        "2.2.2"
 !define PRODUCT_PUBLISHER      "Nettrix"
 !define PRODUCT_WEB_SITE       ""
 !define PRODUCT_DIR_REGKEY     "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}.exe"
@@ -47,7 +47,7 @@ BrandingText "${PRODUCT_PUBLISHER}"
 !define MUI_WELCOMEPAGE_TEXT "This wizard will install ${PRODUCT_NAME} V${PRODUCT_VERSION} on your computer.$\r$\n$\r$\nHardware Engineer Automated Testing Tool — oscilloscope automation for Sequence & Monotony tests.$\r$\n$\r$\nClick Next to continue."
 
 ; Finish page
-!define MUI_FINISHPAGE_RUN "$INSTDIR\EE_Power_On_AutoTool_V2.2.1.exe"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\EE_Power_On_AutoTool_V2.2.2.exe"
 !define MUI_FINISHPAGE_RUN_TEXT "Launch ${PRODUCT_NAME}"
 !define MUI_FINISHPAGE_SHOWREADME ""
 !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
@@ -84,7 +84,7 @@ Section "MainSection" SEC01
     SetOutPath "$INSTDIR"
 
     ; ── Main executable ──────────────────────────────────────────────────
-    File "..\dist\EE_Power_On_AutoTool_V2.2.1.exe"
+    File "..\dist\EE_Power_On_AutoTool_V2.2.2.exe"
 
     ; ── Config template (optional — shipped as default if present) ──
     File /nonfatal "..\config.json"
@@ -97,7 +97,7 @@ Section "MainSection" SEC01
     WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayName"          "${PRODUCT_NAME}"
     WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayVersion"       "${PRODUCT_VERSION}"
     WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "Publisher"            "${PRODUCT_PUBLISHER}"
-    WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayIcon"          "$INSTDIR\EE_Power_On_AutoTool_V2.2.1.exe"
+    WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayIcon"          "$INSTDIR\EE_Power_On_AutoTool_V2.2.2.exe"
     WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "UninstallString"      "$INSTDIR\uninst.exe"
     WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "QuietUninstallString" "$INSTDIR\uninst.exe /S"
     WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "InstallLocation"      "$INSTDIR"
@@ -110,7 +110,7 @@ Section "MainSection" SEC01
     WriteRegDWORD HKLM "${PRODUCT_UNINST_KEY}" "EstimatedSize" "$0"
 
     ; ── App Paths (optional: lets user type app name in Win+R) ───────────
-    WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\EE_Power_On_AutoTool_V2.2.1.exe"
+    WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\EE_Power_On_AutoTool_V2.2.2.exe"
     WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "Path" "$INSTDIR"
 
     ; ── Create uninstaller ────────────────────────────────────────────────
@@ -120,13 +120,13 @@ Section "MainSection" SEC01
     SetShellVarContext all
     CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
     CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME} V${PRODUCT_VERSION}.lnk" \
-        "$INSTDIR\EE_Power_On_AutoTool_V2.2.1.exe"
+        "$INSTDIR\EE_Power_On_AutoTool_V2.2.2.exe"
     CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk" \
         "$INSTDIR\uninst.exe"
 
     ; ── Desktop shortcut ──────────────────────────────────────────────────
     CreateShortCut "$DESKTOP\${PRODUCT_NAME} V${PRODUCT_VERSION}.lnk" \
-        "$INSTDIR\EE_Power_On_AutoTool_V2.2.1.exe"
+        "$INSTDIR\EE_Power_On_AutoTool_V2.2.2.exe"
 SectionEnd
 
 ; ═══════════════════════════════════════════════════════════════════════════════
@@ -137,7 +137,7 @@ Section "Uninstall"
 
     ; ── Kill running instance ──────────────────────────────────────────────
     DetailPrint "Closing running instances..."
-    nsExec::ExecToStack 'taskkill /f /im "EE_Power_On_AutoTool_V2.2.1.exe"'
+    nsExec::ExecToStack 'taskkill /f /im "EE_Power_On_AutoTool_V2.2.2.exe"'
     Pop $0
     Sleep 1000
 
@@ -148,7 +148,7 @@ Section "Uninstall"
     RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
 
     ; ── Remove installed files ────────────────────────────────────────────
-    Delete "$INSTDIR\EE_Power_On_AutoTool_V2.2.1.exe"
+    Delete "$INSTDIR\EE_Power_On_AutoTool_V2.2.2.exe"
     Delete "$INSTDIR\config.json"
     Delete "$INSTDIR\uninst.exe"
 
