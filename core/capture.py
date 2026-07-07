@@ -269,7 +269,7 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                     log.debug('Capture', f'Query delaytime: {delay_time_raw}')
                     if delay_time_raw.find('MEASUREMENT') != -1:
                         if mso5:
-                            delay_time_raw = delay_time_raw[26:]
+                            delay_time_raw = delay_time_raw.split()[-1]
                     delay_time_value = eval(delay_time_raw)
                     delay_time_value = float(delay_time_value)
                     log.debug('Capture', f'Result delaytime: {delay_time_value}')
@@ -337,7 +337,7 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                     log.info('Capture', '[Data] Query %s(%s): %s' % (label, meas_name, raw.strip()))
                     if raw.find('MEASUREMENT') != -1:
                         if mso5:
-                            raw = raw[26:]
+                            raw = raw.split()[-1]  # extract last token (numeric value)
                     val = '%.4f' % float(eval(raw))
                     log.success('Capture', '[Data] %s = %s' % (label, val))
                     return val
