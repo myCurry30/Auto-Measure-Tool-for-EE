@@ -153,7 +153,7 @@ def check_connection(osc):
             pass
         # Use short timeout for heartbeat check
         old_timeout = osc.osc.timeout
-        osc.osc.timeout = 15000  # 15s heartbeat
+        osc.osc.timeout = 3000  # 3s heartbeat
         try:
             response = osc.osc.query('*IDN?')
             if response and len(response) > 0:
