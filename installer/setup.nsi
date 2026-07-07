@@ -119,13 +119,13 @@ Section "MainSection" SEC01
     ; ── Start Menu shortcuts ──────────────────────────────────────────────
     SetShellVarContext all
     CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
-    CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" \
+    CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME} V${PRODUCT_VERSION}.lnk" \
         "$INSTDIR\EE_Power_On_AutoTool_V2.2.0.exe"
     CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk" \
         "$INSTDIR\uninst.exe"
 
     ; ── Desktop shortcut ──────────────────────────────────────────────────
-    CreateShortCut "$DESKTOP\${PRODUCT_NAME}.lnk" \
+    CreateShortCut "$DESKTOP\${PRODUCT_NAME} V${PRODUCT_VERSION}.lnk" \
         "$INSTDIR\EE_Power_On_AutoTool_V2.2.0.exe"
 SectionEnd
 
@@ -142,8 +142,8 @@ Section "Uninstall"
     Sleep 1000
 
     ; ── Remove shortcuts ──────────────────────────────────────────────────
-    Delete "$DESKTOP\${PRODUCT_NAME}.lnk"
-    Delete "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk"
+    Delete "$DESKTOP\${PRODUCT_NAME} V${PRODUCT_VERSION}.lnk"
+    Delete "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME} V${PRODUCT_VERSION}.lnk"
     Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk"
     RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
 
