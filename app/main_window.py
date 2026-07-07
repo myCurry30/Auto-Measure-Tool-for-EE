@@ -1450,7 +1450,7 @@ class MainWindow(QMainWindow):
             osc.write('DISplay:WAVEView1:VIEWStyle OVErlay')
             # Ensure scale readouts are visible after factory reset
             osc.write('DISplay:WAVEView:SCAle ON')
-            osc.write('DISplay:WAVEView:GRIDTYPE FIXED')
+            osc.write('DISplay:WAVEView:GRIDTYPE MOVEable')
 
             # Channel states from UI enable checkboxes
             ch_enables = [cp.ch_enables[i].isChecked() for i in range(4)]

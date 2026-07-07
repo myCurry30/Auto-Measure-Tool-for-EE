@@ -63,7 +63,7 @@ class OscMPO5series(OscilloscopeBase):
     def hormode(self, state):
         self.osc.write('HOR:MODE %s' % state)
         self.osc.write('HOR:MODE:%s:CONFIGure HORIZ' % state)
-        self.osc.write('DISplay:WAVEView:GRIDTYPE FIXED')
+        self.osc.write('DISplay:WAVEView:GRIDTYPE MOVEable')
         self.osc.write('DISplay:WAVEView1:VIEWStyle OVErlay')
 
     def horpos(self, num):
