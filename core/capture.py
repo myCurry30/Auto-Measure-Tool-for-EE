@@ -341,7 +341,7 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                     log.info('Capture', '[SCPI] ← %s' % raw.strip())
                     if raw.find('MEASUREMENT') != -1 and mso5:
                         raw = raw.split()[-1]
-                    val = '%.4f' % float(eval(raw))
+                    val = '%.6f' % float(eval(raw))
                     log.success('Capture', '[Data] %s = %s' % (label, val))
                     return val
                 except Exception as e:
