@@ -337,19 +337,20 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                         raw = raw.split()[-1]
                     return float(eval(raw))
 
-                # DEBUG: query all 4 variants for comparison
-                try:
-                    old_to = osc.osc.timeout
-                    osc.osc.timeout = 30000  # bump timeout for 4 sequential queries
-                    v1 = _read_one(':MEAN?')
-                    v2 = _read_one(':RESUlts:CURRentacq:MEAN?')
-                    v3 = _read_one(':CCRESUlts:CURRentacq:MEAN?')
-                    v4 = _read_one(':ALLAcqs:MEAN?')
-                    osc.osc.timeout = old_to
-                    log.info('Capture', '[DEBUG] %s(%s) MEAN=%.6f  CURRentacq=%.6f  CCRESUlts=%.6f  ALLAcqs=%.6f' % (
-                        label, meas_name, v1, v2, v3, v4))
-                except Exception as e:
-                    log.warning('Capture', '[DEBUG] %s debug query failed: %s' % (label, e))
+                # DEBUG: query all 4 variants for comparison (TOP only)
+                if label == 'TOP':
+                    try:
+                        old_to = osc.osc.timeout
+                        osc.osc.timeout = 60000  # extended timeout for debug
+                        v1 = _read_one(':MEAN?')
+                        v2 = _read_one(':RESUlts:CURRentacq:MEAN?')
+                        v3 = _read_one(':CCRESUlts:CURRentacq:MEAN?')
+                        v4 = _read_one(':ALLAcqs:MEAN?')
+                        osc.osc.timeout = old_to
+                        log.info('Capture', '[DEBUG] %s(%s) MEAN=%.6f  CURRentacq=%.6f  CCRESUlts=%.6f  ALLAcqs=%.6f' % (
+                            label, meas_name, v1, v2, v3, v4))
+                    except Exception as e:
+                        log.warning('Capture', '[DEBUG] %s debug query failed: %s' % (label, e))
 
                 try:
                     val = '%.4f' % _read_one()
