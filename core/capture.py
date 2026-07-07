@@ -349,18 +349,29 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
             type_to_idx = {'TOP': 0, 'BASE': 1, 'MAX': 2, 'MIN': 3}
 
             def _query_meas(meas_name, label):
-                """Query 3 times. If consistent, use that value.
-                If not, retry up to 3 rounds. Last resort: use last round's data."""
-                def _read_one():
-                    raw = osc.query('MEASUrement:%s:MEAN?' % meas_name)
+                """Query with 3-round consistency check."""
+                def _read_one(suffix=':MEAN?'):
+                    raw = osc.query('MEASUrement:%s%s' % (meas_name, suffix))
                     if raw.find('MEASUREMENT') != -1 and mso5:
                         raw = raw.split()[-1]
-                    return '%.4f' % float(eval(raw))
+                    return float(eval(raw))
 
+                # DEBUG: query all 4 variants for comparison
+                try:
+                    v1 = _read_one(':MEAN?')
+                    v2 = _read_one(':RESUlts:CURRentacq:MEAN?')
+                    v3 = _read_one(':CCRESUlts:CURRentacq:MEAN?')
+                    v4 = _read_one(':ALLAcqs:MEAN?')
+                    log.info('Capture', '[DEBUG] %s(%s) MEAN=%.6f  CURRentacq=%.6f  CCRESUlts=%.6f  ALLAcqs=%.6f' % (
+                        label, meas_name, v1, v2, v3, v4))
+                except Exception as e:
+                    log.warning('Capture', '[DEBUG] %s debug query failed: %s' % (label, e))
+
+                # Main: 3-round consistency using :MEAN?
                 best_val = ''
                 for round_num in range(1, 4):
                     try:
-                        vals = [_read_one() for _ in range(3)]
+                        vals = ['%.4f' % _read_one() for _ in range(3)]
                         log.info('Capture', '[Data] Query %s(%s) round %d: %s' % (
                             label, meas_name, round_num, vals))
                         if vals[0] == vals[1] == vals[2]:
