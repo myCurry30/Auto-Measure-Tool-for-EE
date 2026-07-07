@@ -128,12 +128,18 @@ def savepic(osc, pic_path, sheet_name, signals, signal_enables,
     scope_path_with_ext = '%s.PNG' % scope_path_no_ext
 
     # ── Transfer ─────────────────────────────────────────────────────
-    osc.export('PNG', scope_path_no_ext)                # → SAV:IMAG
-    _pulse(); time.sleep(0.3); _pulse()
-    osc.readfile(scope_path_with_ext.replace('\\', '/')) # → FILESYSTEM:READFILE
-    _pulse(); time.sleep(0.2); _pulse()
-    data = osc.readraw(file_path) if save_to_local else None  # → read_raw()
-    _pulse(); time.sleep(0.1); _pulse()
+    # Temporarily extend timeout for file operations (can be slow)
+    old_timeout = osc.osc.timeout
+    osc.osc.timeout = 30000  # 30s for file transfers
+    try:
+        osc.export('PNG', scope_path_no_ext)                # → SAV:IMAG
+        _pulse(); time.sleep(0.3); _pulse()
+        osc.readfile(scope_path_with_ext.replace('\\', '/')) # → FILESYSTEM:READFILE
+        _pulse(); time.sleep(0.2); _pulse()
+        data = osc.readraw(file_path) if save_to_local else None  # → read_raw()
+        _pulse(); time.sleep(0.1); _pulse()
+    finally:
+        osc.osc.timeout = old_timeout
 
     # ── Clean up temp file if user didn't request scope save ─────────
     if not save_to_scope:

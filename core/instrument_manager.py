@@ -151,9 +151,15 @@ def check_connection(osc):
             osc.osc.clear()
         except Exception:
             pass
-        response = osc.osc.query('*IDN?')
-        if response and len(response) > 0:
-            return True
+        # Use short timeout for heartbeat check
+        old_timeout = osc.osc.timeout
+        osc.osc.timeout = 2000  # 2s heartbeat
+        try:
+            response = osc.osc.query('*IDN?')
+            if response and len(response) > 0:
+                return True
+        finally:
+            osc.osc.timeout = old_timeout
     except pyvisa.Error as e:
         print(f'[InstrumentManager] Connection check failed: {e}')
     except UnicodeDecodeError:

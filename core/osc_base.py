@@ -16,7 +16,7 @@ class OscilloscopeBase(ABC):
         """
         address = address.strip().rstrip()
         self.osc = resource_manager.open_resource(address)
-        self.osc.timeout = 30000  # 30s for screenshot/file transfers
+        self.osc.timeout = 5000  # 5s default; extended to 30s for file transfers
         self.osc.baud_rate = 9600
 
     @abstractmethod
