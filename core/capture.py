@@ -257,29 +257,8 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                 try:
                     source = osc.query('MEASUrement:MEAS5:SOUrce1?')
                     log.info('Capture', '[Data] MEAS5 (DELAY) source=%s' % source)
-                    # 3-round consistency check
-                    def _read_delay():
-                        raw = osc.query('MEASUrement:MEAS5:MEAN?')
-                        if raw.find('MEASUREMENT') != -1 and mso5:
-                            raw = raw.split()[-1]
-                        return float(eval(raw))
-                    delay_time_value = None
-                    for rd in range(1, 4):
-                        try:
-                            vals = [_read_delay() for _ in range(3)]
-                            log.info('Capture', '[Data] DELAY round %d: %s' % (rd, vals))
-                            if vals[0] == vals[1] == vals[2]:
-                                delay_time_value = vals[0]
-                                break
-                            delay_time_value = vals[-1]
-                        except Exception as e:
-                            log.error('Capture', '[Data] DELAY query FAILED: %s' % e)
-                            break
-                    if delay_time_value is None:
-                        delay_time_raw = None
-                        delay_time_value = 0.0
-                    else:
-                        delay_time_raw = str(delay_time_value)
+                    delay_time_raw = osc.query('MEASUrement:MEAS5:MEAN?')
+                    log.info('Capture', '[Data] MEAS5 (DELAY) raw=%s' % delay_time_raw)
                 except Exception as e:
                     log.error('Capture', '[Data] MEAS5 (DELAY) query FAILED: %s' % e)
                     delay_time_raw = None
@@ -288,7 +267,9 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                     delay_time = ''
                 else:
                     log.debug('Capture', f'Query delaytime: {delay_time_raw}')
-                    delay_time_value = float(delay_time_value)
+                    if delay_time_raw.find('MEASUREMENT') != -1 and mso5:
+                        delay_time_raw = delay_time_raw.split()[-1]
+                    delay_time_value = float(eval(delay_time_raw))
                     log.debug('Capture', f'Result delaytime: {delay_time_value}')
 
                     if abs(delay_time_value) >= 1:
@@ -356,7 +337,7 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
             type_to_idx = {'TOP': 0, 'BASE': 1, 'MAX': 2, 'MIN': 3}
 
             def _query_meas(meas_name, label):
-                """Query with 3-round consistency check."""
+                """Query measurement value from scope."""
                 def _read_one(suffix=':MEAN?'):
                     raw = osc.query('MEASUrement:%s%s' % (meas_name, suffix))
                     if raw.find('MEASUREMENT') != -1 and mso5:
@@ -374,27 +355,13 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                 except Exception as e:
                     log.warning('Capture', '[DEBUG] %s debug query failed: %s' % (label, e))
 
-                # Main: 3-round consistency using :MEAN?
-                best_val = ''
-                for round_num in range(1, 4):
-                    try:
-                        vals = ['%.4f' % _read_one() for _ in range(3)]
-                        log.info('Capture', '[Data] Query %s(%s) round %d: %s' % (
-                            label, meas_name, round_num, vals))
-                        if vals[0] == vals[1] == vals[2]:
-                            log.success('Capture', '[Data] %s = %s (consistent, round %d)' % (
-                                label, vals[0], round_num))
-                            return vals[0]
-                        best_val = vals[-1]
-                        log.warning('Capture', '[Data] %s inconsistent round %d, retrying' % (
-                            label, round_num))
-                    except Exception as e:
-                        log.error('Capture', '[Data] %s query FAILED round %d: %s' % (
-                            label, round_num, e))
-                        return ''
-                log.warning('Capture', '[Data] %s using last value after 3 rounds: %s' % (
-                    label, best_val))
-                return best_val
+                try:
+                    val = '%.4f' % _read_one()
+                    log.success('Capture', '[Data] %s = %s' % (label, val))
+                    return val
+                except Exception as e:
+                    log.error('Capture', '[Data] %s query FAILED: %s' % (label, e))
+                    return ''
 
             def _maybe_query(meas_type, fallback):
                 """Query measurement value if enabled and available."""
