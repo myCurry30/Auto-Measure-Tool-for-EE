@@ -1323,8 +1323,8 @@ class MainWindow(QMainWindow):
             cp.trig_level = trig_spin.value() * trig_unit
             if self.state.osc:
                 osc = self.state.osc
+                osc.write(f'HORIZONTAL:SCALE {cp.hor_scale:g}')
                 osc.hormode(cp.hor_mode)
-                osc.write(f'HORIZONTAL:MODE:SCALE {cp.hor_scale:g}')
                 osc.horpos(cp.hor_pos)
                 osc.trigger('NORMAL', cp.trig_channel, cp.trig_edge, cp.trig_level)
                 self.state.set_status(f"Horizontal: {cp.hor_mode} {self._fmt_scale(cp.hor_scale)}/div {cp.hor_pos}%"
@@ -1477,8 +1477,8 @@ class MainWindow(QMainWindow):
                     delay_ref_high=cp.delay_ref_high, delay_ref_low=cp.delay_ref_low)
 
             # Horizontal
+            osc.write(f'HORIZONTAL:SCALE {cp.hor_scale:g}')
             osc.hormode(cp.hor_mode)
-            osc.write(f'HORIZONTAL:MODE:SCALE {cp.hor_scale:g}')
             osc.horpos(cp.hor_pos)
 
             # Trigger
