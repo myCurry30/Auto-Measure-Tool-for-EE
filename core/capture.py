@@ -311,6 +311,13 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                     xls.setCell(sheet_name, m, data_col, delay_time)
 
         if test_type == "monotony":
+            # DEBUG: query all results at once
+            try:
+                all_results = osc.query('MEASUrement?')
+                log.info('Capture', '[DEBUG] MEASUrement? = %s' % all_results.strip())
+            except Exception:
+                pass
+
             # Monotony: query known MEAS names directly — no LIST?/TYPE? needed.
             # measure_monotony creates: MEAS1=TOP, MEAS2=BASE,
             # MEAS3=MAX, MEAS4=MIN, MEAS5=RISETIME, MEAS6=FALLTIME
