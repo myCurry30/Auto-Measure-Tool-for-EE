@@ -255,10 +255,13 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                 delay_time = ''
             else:
                 try:
+                    log.info('Capture', '[SCPI] → MEASUrement:MEAS5:SOUrce1?')
                     source = osc.query('MEASUrement:MEAS5:SOUrce1?')
-                    log.info('Capture', '[Data] MEAS5 (DELAY) source=%s' % source)
-                    delay_time_raw = osc.query('MEASUrement:MEAS5:MEAN?')
-                    log.info('Capture', '[Data] MEAS5 (DELAY) raw=%s' % delay_time_raw)
+                    log.info('Capture', '[SCPI] ← %s' % source.strip())
+                    delay_cmd = 'MEASUrement:MEAS5:RESUlts:CURRentacq:MEAN?'
+                    log.info('Capture', '[SCPI] → %s' % delay_cmd)
+                    delay_time_raw = osc.query(delay_cmd)
+                    log.info('Capture', '[SCPI] ← %s' % delay_time_raw.strip())
                 except Exception as e:
                     log.error('Capture', '[Data] MEAS5 (DELAY) query FAILED: %s' % e)
                     delay_time_raw = None
@@ -331,29 +334,14 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
 
             def _query_meas(meas_name, label):
                 """Query measurement value from scope."""
-                def _read_one(suffix=':MEAN?'):
-                    raw = osc.query('MEASUrement:%s%s' % (meas_name, suffix))
+                cmd = 'MEASUrement:%s:RESUlts:CURRentacq:MEAN?' % meas_name
+                try:
+                    log.info('Capture', '[SCPI] → %s' % cmd)
+                    raw = osc.query(cmd)
+                    log.info('Capture', '[SCPI] ← %s' % raw.strip())
                     if raw.find('MEASUREMENT') != -1 and mso5:
                         raw = raw.split()[-1]
-                    return float(eval(raw))
-
-                # DEBUG: query all 4 variants individually with separate timeouts (TOP only)
-                if label == 'TOP':
-                    old_to = osc.osc.timeout
-                    osc.osc.timeout = 15000
-                    for suffix, tag in [(':MEAN?', 'MEAN'),
-                                         (':RESUlts:CURRentacq:MEAN?', 'CURRentacq'),
-                                         (':CCRESUlts:CURRentacq:MEAN?', 'CCRESUlts'),
-                                         (':ALLAcqs:MEAN?', 'ALLAcqs')]:
-                        try:
-                            val = _read_one(suffix)
-                            log.info('Capture', '[DEBUG] %s(%s) %s=%.6f' % (label, meas_name, tag, val))
-                        except Exception as e:
-                            log.warning('Capture', '[DEBUG] %s(%s) %s FAILED: %s' % (label, meas_name, tag, e))
-                    osc.osc.timeout = old_to
-
-                try:
-                    val = '%.4f' % _read_one()
+                    val = '%.4f' % float(eval(raw))
                     log.success('Capture', '[Data] %s = %s' % (label, val))
                     return val
                 except Exception as e:
