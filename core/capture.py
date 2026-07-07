@@ -292,13 +292,6 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
                     xls.setCell(sheet_name, m, data_col, delay_time)
 
         if test_type == "monotony":
-            # DEBUG: query all results at once
-            try:
-                all_results = osc.query('MEASUrement?')
-                log.info('Capture', '[DEBUG] MEASUrement? = %s' % all_results.strip())
-            except Exception:
-                pass
-
             # Monotony: query known MEAS names directly — no LIST?/TYPE? needed.
             # measure_monotony creates: MEAS1=TOP, MEAS2=BASE,
             # MEAS3=MAX, MEAS4=MIN, MEAS5=RISETIME, MEAS6=FALLTIME
@@ -346,10 +339,13 @@ def Capture_Pic(osc, xls, sheet_name, signals, signal_enables,
 
                 # DEBUG: query all 4 variants for comparison
                 try:
+                    old_to = osc.osc.timeout
+                    osc.osc.timeout = 30000  # bump timeout for 4 sequential queries
                     v1 = _read_one(':MEAN?')
                     v2 = _read_one(':RESUlts:CURRentacq:MEAN?')
                     v3 = _read_one(':CCRESUlts:CURRentacq:MEAN?')
                     v4 = _read_one(':ALLAcqs:MEAN?')
+                    osc.osc.timeout = old_to
                     log.info('Capture', '[DEBUG] %s(%s) MEAN=%.6f  CURRentacq=%.6f  CCRESUlts=%.6f  ALLAcqs=%.6f' % (
                         label, meas_name, v1, v2, v3, v4))
                 except Exception as e:
