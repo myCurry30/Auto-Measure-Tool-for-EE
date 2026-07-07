@@ -204,7 +204,7 @@ def extract_chapters(md_text: str) -> list[dict]:
 # Embedded user manual (bundled in code, no external file needed)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-_EMBEDDED_MANUAL = r"""# EE Power On AutoTool V2.2 — 用户操作手册
+_EMBEDDED_MANUAL = r"""# EE Power On AutoTool V2.2.1 — 用户操作手册
 
 硬件工程师自动化测试工具 | 示波器 Sequence & Monotony 自动测量
 
@@ -280,7 +280,7 @@ liujch2
 
 ### 2.1 从安装包安装（推荐）
 
-1. 双击 `EE_Power_On_AutoTool_V2.2.0_Setup.exe`
+1. 双击 `EE_Power_On_AutoTool_V2.2.1_Setup.exe`
 2. 点击 **Next**，阅读许可协议
 3. 选择安装目录（默认 `C:\Program Files\EE Power On AutoTool\`）
 4. 点击 **Install**，等待完成
@@ -647,7 +647,7 @@ Excel 测试报告建议格式：
 
 > 技术支持：liujch2
 >
-> 版本：V2.2.0 | 2026年7月
+> 版本：V2.2.1 | 2026年7月
 """
 
 
@@ -660,7 +660,7 @@ class HelpDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("用户操作手册 — EE Power On AutoTool V2.2")
+        self.setWindowTitle("用户操作手册 — EE Power On AutoTool V2.2.1")
         self.setMinimumSize(900, 640)
         self.resize(960, 700)
 
@@ -680,7 +680,7 @@ class HelpDialog(QDialog):
         """Remove the document title block (H1 + metadata lines up to first HR).
 
         The Windows title bar already shows "用户操作手册 — EE Power On
-        AutoTool V2.2", so the H1 heading, subtitle, and author lines in
+        AutoTool V2.2.1", so the H1 heading, subtitle, and author lines in
         the markdown are redundant and would waste vertical space.
         """
         lines = text.split('\n')

@@ -25,7 +25,7 @@ def main():
     # Create application
     app = QApplication(sys.argv)
     app.setApplicationName("EE Power On AutoTool")
-    app.setApplicationVersion("2.2.0")
+    app.setApplicationVersion("2.2.1")
 
     # Set application icon (title bar + taskbar)
     icon_path = os.path.join(PROJECT_ROOT, "resources", "app_icon.ico")
@@ -37,7 +37,7 @@ def main():
     window.show()
 
     print("=" * 50)
-    print("  硬件工程师自动化测试工具  V2.2")
+    print("  硬件工程师自动化测试工具  V2.2.1")
     print("  liujch2")
     print("=" * 50)
     print("  Scope: MSO4/5/6  DPO7000  DPO5000  (PyVISA)")

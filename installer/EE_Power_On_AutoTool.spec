@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller spec file for EE Power On AutoTool V2.2
+PyInstaller spec file for EE Power On AutoTool V2.2.1
 
 Build command:
     pyinstaller installer/EE_Power_On_AutoTool.spec --clean --noconfirm
@@ -121,7 +121,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='EE_Power_On_AutoTool_V2.2.0',
+    name='EE_Power_On_AutoTool_V2.2.1',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
