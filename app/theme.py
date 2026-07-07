@@ -249,20 +249,10 @@ QStatusBar QPushButton:hover {
     color: #007AFF;
 }
 
-/* === Checkboxes & Radio Buttons — native checkmark + visible border === */
+/* === Checkboxes & Radio Buttons — native OS rendering === */
 QCheckBox, QRadioButton {
     background: transparent;
     spacing: 6px;
-}
-QCheckBox::indicator, QRadioButton::indicator {
-    width: 16px; height: 16px;
-    border: 1.5px solid #C8C8CD;
-}
-QCheckBox::indicator:checked, QRadioButton::indicator:checked {
-    border-color: #007AFF;
-}
-QCheckBox::indicator:hover, QRadioButton::indicator:hover {
-    border-color: #007AFF;
 }
 """
 
@@ -513,20 +503,10 @@ QStatusBar QPushButton:hover {
     color: #0A84FF;
 }
 
-/* === Checkboxes & Radio Buttons — native checkmark + visible border === */
+/* === Checkboxes & Radio Buttons — native OS rendering === */
 QCheckBox, QRadioButton {
     background: transparent;
     spacing: 6px;
-}
-QCheckBox::indicator, QRadioButton::indicator {
-    width: 16px; height: 16px;
-    border: 1.5px solid #636366;
-}
-QCheckBox::indicator:checked, QRadioButton::indicator:checked {
-    border-color: #0A84FF;
-}
-QCheckBox::indicator:hover, QRadioButton::indicator:hover {
-    border-color: #0A84FF;
 }
 """
 
