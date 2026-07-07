@@ -248,6 +248,34 @@ QStatusBar QPushButton {
 QStatusBar QPushButton:hover {
     color: #007AFF;
 }
+
+/* === Checkboxes & Radio Buttons === */
+QCheckBox::indicator {
+    width: 16px; height: 16px;
+    border: 1.5px solid #C8C8CD;
+    border-radius: 3px;
+    background: #FFFFFF;
+}
+QCheckBox::indicator:checked {
+    border-color: #007AFF;
+    background: #007AFF;
+}
+QCheckBox::indicator:hover {
+    border-color: #007AFF;
+}
+QRadioButton::indicator {
+    width: 16px; height: 16px;
+    border: 1.5px solid #C8C8CD;
+    border-radius: 8px;
+    background: #FFFFFF;
+}
+QRadioButton::indicator:checked {
+    border-color: #007AFF;
+    background: #007AFF;
+}
+QRadioButton::indicator:hover {
+    border-color: #007AFF;
+}
 """
 
 
@@ -495,6 +523,34 @@ QStatusBar QPushButton {
 
 QStatusBar QPushButton:hover {
     color: #0A84FF;
+}
+
+/* === Checkboxes & Radio Buttons === */
+QCheckBox::indicator {
+    width: 16px; height: 16px;
+    border: 1.5px solid #636366;
+    border-radius: 3px;
+    background: #3A3A3C;
+}
+QCheckBox::indicator:checked {
+    border-color: #0A84FF;
+    background: #0A84FF;
+}
+QCheckBox::indicator:hover {
+    border-color: #0A84FF;
+}
+QRadioButton::indicator {
+    width: 16px; height: 16px;
+    border: 1.5px solid #636366;
+    border-radius: 8px;
+    background: #3A3A3C;
+}
+QRadioButton::indicator:checked {
+    border-color: #0A84FF;
+    background: #0A84FF;
+}
+QRadioButton::indicator:hover {
+    border-color: #0A84FF;
 }
 """
 
