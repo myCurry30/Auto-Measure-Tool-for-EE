@@ -18,6 +18,13 @@ class OscilloscopeBase(ABC):
         self.osc = resource_manager.open_resource(address)
         self.osc.timeout = 15000  # 15s default; extended to 30s for file transfers
         self.osc.baud_rate = 9600
+        # Enable TCP keepalive to detect dead connections (scope BSOD, cable unplug)
+        try:
+            if hasattr(self.osc, 'visalib'):
+                self.osc.visalib.set_attribute(
+                    self.osc.session, 0x3FFF0177, 1)  # VI_ATTR_TCPIP_KEEPALIVE
+        except Exception:
+            pass
 
     @abstractmethod
     def state(self, state):
